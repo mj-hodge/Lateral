@@ -1,0 +1,54 @@
+# World Bank indicator pipeline configuration.
+# Paths are relative to the project root (the parent of this file's directory).
+api:
+  base_url: https://api.worldbank.org/v2
+  path_template: "country/{country}/indicator/{indicator}"
+  format: json
+  per_page: 3                  # 7 records per pull => 3 pages, so paging is exercised on the live API
+  timeout_seconds: 30
+date_range:
+  start: 2018
+  end: 2024                    # inclusive; sent as date=2018:2024
+countries: [BRA, CAN, DEU, GBR, IND, JPN, MEX, USA, ZAF]   # ISO3
+indicators:
+  - code: SP.POP.TOTL
+    name: Population, total
+    table_name: population_total
+    primary_key: [countryiso3code, date]
+  - code: NY.GDP.MKTP.CD
+    name: GDP, current US dollars
+    table_name: gdp_current_usd
+    primary_key: [countryiso3code, date]
+  - code: NY.GDP.PCAP.CD
+    name: GDP per capita, current US dollars
+    table_name: gdp_per_capita_current_usd
+    primary_key: [countryiso3code, date]
+  - code: SP.DYN.LE00.IN
+    name: Life expectancy at birth, total years
+    table_name: life_expectancy_years
+    primary_key: [countryiso3code, date]
+retry:
+  status_codes: [429]
+  retry_on_5xx: true
+  retry_on_connection_errors: true
+  sleep_seconds: 60
+  max_retries: 3
+request_id:
+  format: "%Y%m%dT%H%M%S%f"
+paths:                         # {indicator} is replaced by the indicator code
+  landing: storage/landing/{indicator}
+  staging: storage/staging/{indicator}
+  archived: storage/archived/{indicator}
+  rejected: storage/rejected/{indicator}
+  staging_failed_marker: storage/staging/{indicator}/staging_failed_request_ids.txt
+  data: storage/data/{indicator}
+  request_log: log/{indicator}
+  row_count_reports: tests/{indicator}/row_count
+  run_log: log/pipeline.log
+  analysis_out: sql/analysis
+  analysis_sql: sql/code/analysis.sql
+analysis:
+  output_file: life_expectancy_by_gdp_per_capita.psv
+  tables:                      # stable view names the SQL file uses -> indicator codes
+    life_expectancy: SP.DYN.LE00.IN
+    gdp_per_capita: NY.GDP.PCAP.CD

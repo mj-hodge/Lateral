@@ -1,0 +1,9 @@
+2026-11-08 17:18:22,415 INFO indicator SP.POP.TOTL: start
+2026-11-08 17:18:32,081 INFO indicator SP.POP.TOTL: merged 63 staging rows into /home/hodge/Lateral/storage/data/SP.POP.TOTL/SP.POP.TOTL.psv
+2026-11-08 17:18:32,081 INFO indicator NY.GDP.MKTP.CD: start
+2026-11-08 17:18:41,371 INFO indicator NY.GDP.MKTP.CD: merged 63 staging rows into /home/hodge/Lateral/storage/data/NY.GDP.MKTP.CD/NY.GDP.MKTP.CD.psv
+2026-11-08 17:18:41,372 INFO indicator NY.GDP.PCAP.CD: start
+2026-11-08 17:18:50,585 INFO indicator NY.GDP.PCAP.CD: merged 63 staging rows into /home/hodge/Lateral/storage/data/NY.GDP.PCAP.CD/NY.GDP.PCAP.CD.psv
+2026-11-08 17:18:50,586 INFO indicator SP.DYN.LE00.IN: start
+2026-11-08 17:19:00,829 INFO indicator SP.DYN.LE00.IN: merged 63 staging rows into /home/hodge/Lateral/storage/data/SP.DYN.LE00.IN/SP.DYN.LE00.IN.psv
+2026-11-08 17:19:00,896 INFO analysis written to /home/hodge/Lateral/sql/analysis/life_expectancy_by_gdp_per_capita.psv

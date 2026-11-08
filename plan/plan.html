@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World Bank Indicator Pipeline Plan</title>
+<style>
+:root{--bg:#fafaf8;--panel:#fff;--ink:#1c1f24;--mute:#5c6470;--line:#d9dce1;--acc:#1f5fbf;--acc2:#e8f0fc;--ok:#1d7a46;--bad:#b3261e;--warn:#9a6700;--code:#f1f2f4;--nodefill:#eef2f8;--nodestroke:#6b7a99;}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14161a;--panel:#1c1f25;--ink:#e6e8ec;--mute:#98a1ae;--line:#323844;--acc:#7aa7ff;--acc2:#222c40;--ok:#58c88a;--bad:#ff8a80;--warn:#e3b341;--code:#252a33;--nodefill:#232a38;--nodestroke:#7d8db0;}}
+:root[data-theme="dark"]{--bg:#14161a;--panel:#1c1f25;--ink:#e6e8ec;--mute:#98a1ae;--line:#323844;--acc:#7aa7ff;--acc2:#222c40;--ok:#58c88a;--bad:#ff8a80;--warn:#e3b341;--code:#252a33;--nodefill:#232a38;--nodestroke:#7d8db0;}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header.top{position:sticky;top:0;z-index:20;display:flex;gap:12px;align-items:center;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+header.top h1{font-size:1rem;margin:0;flex:1}
+button,select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+.layout{display:flex;max-width:1280px;margin:0 auto}
+nav{width:250px;flex:none;position:sticky;top:50px;align-self:flex-start;max-height:calc(100vh - 50px);overflow:auto;padding:16px;border-right:1px solid var(--line)}
+nav a{display:block;padding:4px 8px;margin:1px 0;color:var(--mute);text-decoration:none;border-radius:5px;font-size:.9rem}
+nav a:hover{background:var(--acc2)} nav a.active{background:var(--acc2);color:var(--acc);font-weight:600}
+main{flex:1;min-width:0;padding:8px 24px 80px}
+section{padding-top:20px}
+h2{font-size:1.4rem;margin:.2em 0 .5em;padding-bottom:4px;border-bottom:2px solid var(--line)}
+h3{font-size:1.05rem;margin:1.2em 0 .4em}
+p,li{max-width:80ch}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.86em}
+code{background:var(--code);padding:1px 5px;border-radius:4px}
+pre{background:var(--code);padding:12px;border-radius:8px;overflow:auto;border:1px solid var(--line);line-height:1.45}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:.88rem;margin:.6em 0}
+.tw{overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{background:var(--acc2)}
+details{border:1px solid var(--line);border-radius:8px;margin:10px 0;background:var(--panel)}
+summary{cursor:pointer;padding:8px 12px;font-weight:600}
+details>div{padding:0 14px 10px}
+.callout{border-left:4px solid var(--acc);background:var(--acc2);padding:8px 14px;border-radius:0 8px 8px 0;margin:12px 0}
+.callout.warn{border-color:var(--warn)} .callout.bad{border-color:var(--bad)}
+.tag{display:inline-block;padding:0 7px;border-radius:10px;background:var(--acc2);color:var(--acc);font-size:.78rem;font-weight:600}
+.pass{color:var(--ok);font-weight:600}.fail{color:var(--bad);font-weight:600}
+svg{max-width:100%;height:auto}
+svg .n{fill:var(--nodefill);stroke:var(--nodestroke);stroke-width:1.3}
+svg .nb{fill:var(--acc2);stroke:var(--acc);stroke-width:1.5}
+svg .nx{fill:none;stroke:var(--bad);stroke-width:1.5;stroke-dasharray:5 3}
+svg text{fill:var(--ink);font:12px system-ui,sans-serif}
+svg .s{fill:var(--mute);font-size:10.5px}
+svg .l{stroke:var(--mute);stroke-width:1.4;fill:none}
+svg .lf{stroke:var(--bad);stroke-width:1.4;fill:none;stroke-dasharray:5 3}
+.filter{width:100%;padding:6px 10px;margin:6px 0;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--ink);font:inherit}
+@media (max-width:820px){
+ nav{display:none;position:fixed;top:50px;left:0;right:0;bottom:0;width:auto;max-height:none;background:var(--bg);z-index:15;border:0}
+ nav.open{display:block}
+ main{padding:8px 16px 80px}
+ #menu{display:inline-block}
+}
+@media (min-width:821px){#menu{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+ <button id="menu" aria-label="Toggle navigation">Menu</button>
+ <h1>World Bank Indicator Pipeline: Plan</h1>
+ <button id="expand">Expand all</button>
+ <button id="theme" aria-label="Toggle theme">Theme</button>
+</header>
+<div class="layout">
+<nav id="nav">
+ <a href="#overview">1. Overview</a>
+ <a href="#architecture">2. Architecture and data flow</a>
+ <a href="#config">3. YAML config schema</a>
+ <a href="#layout">4. Folder layout</a>
+ <a href="#modules">5. Modules and functions</a>
+ <a href="#request-paging">6. request_id and paging</a>
+ <a href="#schema-check">7. Schema check</a>
+ <a href="#logging">8. Request log format</a>
+ <a href="#row-count">9. row_count test</a>
+ <a href="#staging">10. Staging and staging_merge_id</a>
+ <a href="#archive">11. Archive step</a>
+ <a href="#merge">12. Merge / upsert</a>
+ <a href="#sql">13. DuckDB analysis SQL</a>
+ <a href="#failure">14. Failure and retry</a>
+ <a href="#tests">15. Test strategy</a>
+ <a href="#run-order">16. Run order and entrypoint</a>
+ <a href="#assumptions">17. Assumptions and open questions</a>
+ <a href="#trace">18. Requirements traceability</a>
+</nav>
+<main>
+
+<section id="overview">
+<h2>1. Overview</h2>
+<p>A procedural Python pipeline that, for each configured country and indicator, pulls World Bank API data (one request series per country+indicator), lands it as raw JSON, schema-checks it, stages it as a pipe-delimited file, runs a <code>row_count</code> data quality test, archives the landing files, upserts staging into a per-indicator base table with lineage columns, and finally runs a DuckDB SQL analysis (life expectancy by GDP per capita per country).</p>
+<div class="callout"><b>Key decisions at a glance</b>
+<ul>
+<li><b>One landing file per page</b> (<code>&lt;C&gt;_&lt;I&gt;_&lt;request_id&gt;_p&lt;page&gt;.json</code>), each holding that page's raw 2-element response array; all pages of a pull share one request_id and one log file (decision A1, human-approved).</li>
+<li><code>api.per_page</code> defaults to <b>3</b> in config, so each pull is 7 records over 3 pages and paging is visible against the live API (decision A8).</li>
+<li><code>row_count</code> failure (decided A2): halt the whole pipeline before archive and merge for that indicator, leave landing files in place, write a FAIL report, exit non-zero. A rerun re-pulls only the failed request_ids; a staging problem tied to landing files is handled the same way.</li>
+<li>Retries (decided A7): 429, 5xx and connection errors/timeouts all use the same policy: sleep 60s, retry, fail after 3 retries.</li>
+<li>Everything is read as strings (<code>dtype=str</code>) in merge, so business values never drift through float formatting and reruns are byte-stable.</li>
+<li>Base rows store the <em>latest</em> <code>request_id</code> and <code>staging_merge_id</code> as scalar columns plus the two <code>;</code>-joined lineage lists (ids contain neither <code>;</code> nor <code>|</code>), appended with a no-duplicate guard.</li>
+<li>Phase 5 commits everything, including generated data, logs, reports and analysis output; the plan introduces no <code>.gitignore</code> (section 4, A13).</li>
+<li>All dates, paths, countries, indicators, primary keys and retry settings come from <code>config/pipeline.yaml</code>. Adding a country or indicator is a YAML-only change.</li>
+<li>All I/O seams (HTTP, sleep, clock) are injectable keyword parameters at every layer, including <code>main</code>, so tests mock the API with no network.</li>
+<li>Revision 2 (after plan review): duplicate-key and identity problems are caught <em>inside the pull</em> so a bad landing file can never deadlock reruns; stale/multiple landing files have a pinned recovery rule; the &ldquo;latest report&rdquo; rule is defined; pytest temp files stay inside the project.</li>
+<li>Revision 4 (human decisions): per-page landing files, 5xx/connection retries, <code>per_page: 3</code>, scalar <code>request_id</code>/<code>staging_merge_id</code> in base, commit-everything, terminology cleanup (&ldquo;response metadata, array element 0&rdquo;). Questions Q1-Q12 are resolved into assumptions (section 17).</li>
+</ul></div>
+
+<h3>Live API findings (read-only checks on 2026-11-08)</h3>
+<div class="tw"><table>
+<tr><th>Check</th><th>Result</th><th>Plan impact</th></tr>
+<tr><td><code>date=2018:2024</code> for all 9 countries x 4 indicators (36 pulls)</td><td><code>total=7</code> for every pull, exactly 7 records, <code>pages=1</code> at the default <code>per_page=50</code> (3 pages at <code>per_page=3</code>), no null <code>value</code> in this range today</td><td>row_count expected = 7 per request. Null handling is still implemented (null values are kept, not dropped; they count toward <code>total</code>).</td></tr>
+<tr><td>Response metadata (array element 0)</td><td><code>{"page":1,"pages":1,"per_page":50,"total":7,"sourceid":"2","lastupdated":"2026-10-08"}</code>. <code>per_page</code> default is 50 and is an integer, <code>sourceid</code>/<code>lastupdated</code> are strings.</td><td>Schema check types match this exactly.</td></tr>
+<tr><td><code>per_page=3&amp;page=2</code></td><td>Honored: <code>pages=3</code>, <code>page=2</code>, <code>total=7</code>.</td><td><code>per_page</code> is a config key. The project default is 3 (decision A8), so a real run makes 3 requests and writes 3 page files per pull (3+3+1 records), 108 requests in total.</td></tr>
+<tr><td>Record shape</td><td><code>country.id</code> is ISO2 (<code>BR</code>) while <code>countryiso3code</code> is ISO3 (<code>BRA</code>). Records come newest-first (2024 ... 2018), but order is not guaranteed.</td><td>Primary key uses <code>countryiso3code</code>; ordering is never relied on; merge sorts deterministically.</td></tr>
+<tr><td>Indicator names</td><td>API says "GDP (current US$)", prompt says "GDP, current US dollars".</td><td>Config <code>name</code> is our label; schema check validates <code>indicator.id</code> only; staging stores the API's own name in <code>indicator_name</code>.</td></tr>
+<tr><td>Invalid country (<code>ZZZ</code>)</td><td>HTTP <b>200</b> with body <code>[{"message":[{"id":"120","key":"Invalid value",...}]}]</code> (1-element list, no records).</td><td>HTTP status alone is not enough. The schema check catches this (length != 2) and includes the API message in the error. Fails loudly.</td></tr>
+</table></div>
+</section>
+
+<section id="architecture">
+<h2>2. Architecture and data flow</h2>
+<p>Per indicator the steps run strictly in order. The indicator loop is sequential; within an indicator, countries are pulled one at a time (one request series per country+indicator). Analysis runs once at the end after all indicators have merged.</p>
+<svg viewBox="0 0 900 640" role="img" aria-label="Pipeline data flow diagram">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--mute)"/></marker>
+<marker id="arf" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--bad)"/></marker></defs>
+<rect class="n" x="20" y="20" width="190" height="52" rx="8"/><text x="115" y="42" text-anchor="middle">config/pipeline.yaml</text><text class="s" x="115" y="58" text-anchor="middle">countries, indicators, dates, paths, retry</text>
+<rect class="n" x="260" y="20" width="190" height="52" rx="8"/><text x="355" y="42" text-anchor="middle">api.worldbank.org</text><text class="s" x="355" y="58" text-anchor="middle">/v2/country/{c}/indicator/{i}</text>
+<path class="l" d="M210 46H258" marker-end="url(#ar)"/>
+<text class="s" x="215" y="40">URLs</text>
+<rect class="nb" x="20" y="110" width="430" height="70" rx="8"/><text x="235" y="132" text-anchor="middle" font-weight="600">1. INGEST per country+indicator (api.py, ingest.py)</text><text class="s" x="235" y="150" text-anchor="middle">new request_id; fetch_page per page (429/5xx/conn error: sleep 60s, 3 retries)</text><text class="s" x="235" y="165" text-anchor="middle">schema_check EVERY page as it arrives; buffer pages in memory</text>
+<path class="l" d="M355 72V108" marker-end="url(#ar)"/>
+<rect class="n" x="500" y="105" width="190" height="34" rx="8"/><text x="595" y="127" text-anchor="middle">log/{ind}/{request_id}.log</text>
+<rect class="n" x="500" y="150" width="190" height="34" rx="8"/><text x="595" y="165" text-anchor="middle">storage/landing/{ind}/</text><text class="s" x="595" y="178" text-anchor="middle">{C}_{ind}_{request_id}_p{n}.json</text>
+<path class="l" d="M450 128H498" marker-end="url(#ar)"/><path class="l" d="M450 167H498" marker-end="url(#ar)"/>
+<rect class="nx" x="720" y="105" width="160" height="79" rx="8"/><text x="800" y="128" text-anchor="middle" fill="var(--bad)">STOP on failure</text><text class="s" x="800" y="146" text-anchor="middle">schema error, retries exhausted,</text><text class="s" x="800" y="160" text-anchor="middle">HTTP error: nothing written</text><text class="s" x="800" y="174" text-anchor="middle">for that pull; exit non-zero</text>
+<path class="lf" d="M235 110V92H800V103" marker-end="url(#arf)"/>
+<rect class="nb" x="20" y="235" width="430" height="70" rx="8"/><text x="235" y="257" text-anchor="middle" font-weight="600">2. STAGE (staging.py)</text><text class="s" x="235" y="275" text-anchor="middle">read all page files of a request_id into one per-country frame (by request_id)</text><text class="s" x="235" y="290" text-anchor="middle">concat to one frame; add staging_merge_id (uuid4); write .psv</text>
+<path class="l" d="M595 184V210H235V233" marker-end="url(#ar)"/>
+<rect class="n" x="500" y="245" width="190" height="50" rx="8"/><text x="595" y="265" text-anchor="middle">storage/staging/{ind}/</text><text class="s" x="595" y="281" text-anchor="middle">{ind}_staging.psv</text>
+<path class="l" d="M450 270H498" marker-end="url(#ar)"/>
+<rect class="nb" x="20" y="350" width="430" height="64" rx="8"/><text x="235" y="372" text-anchor="middle" font-weight="600">3. row_count TEST (dq_tests.py)</text><text class="s" x="235" y="390" text-anchor="middle">per request_id: log total == len(per-country frame, all pages)</text><text class="s" x="235" y="404" text-anchor="middle">write tests/{ind}/row_count/ report</text>
+<path class="l" d="M235 305V348" marker-end="url(#ar)"/>
+<rect class="n" x="500" y="360" width="190" height="44" rx="8"/><text x="595" y="380" text-anchor="middle">tests/{ind}/row_count/</text><text class="s" x="595" y="394" text-anchor="middle">row_count_{id}.psv (PASS/FAIL)</text>
+<path class="l" d="M450 382H498" marker-end="url(#ar)"/>
+<rect class="nx" x="720" y="350" width="160" height="64" rx="8"/><text x="800" y="372" text-anchor="middle" fill="var(--bad)">any FAIL: halt</text><text class="s" x="800" y="388" text-anchor="middle">no archive, no merge,</text><text class="s" x="800" y="402" text-anchor="middle">landing files stay</text>
+<rect class="nb" x="20" y="455" width="200" height="58" rx="8"/><text x="120" y="477" text-anchor="middle" font-weight="600">4. ARCHIVE (archive.py)</text><text class="s" x="120" y="495" text-anchor="middle">move landing -> archived</text><text class="s" x="120" y="507" text-anchor="middle">landing now empty</text>
+<path class="l" d="M120 414V453" marker-end="url(#ar)"/><text class="s pass" x="128" y="437" style="fill:var(--ok)">all PASS</text>
+<path class="lf" d="M690 395H718" marker-end="url(#arf)"/>
+<rect class="nb" x="250" y="455" width="200" height="58" rx="8"/><text x="350" y="477" text-anchor="middle" font-weight="600">5. MERGE (merge.py)</text><text class="s" x="350" y="495" text-anchor="middle">upsert on PK; latest ids + lineage lists</text><text class="s" x="350" y="507" text-anchor="middle">atomic overwrite of base .psv</text>
+<path class="l" d="M220 484H248" marker-end="url(#ar)"/>
+<rect class="n" x="500" y="455" width="190" height="58" rx="8"/><text x="595" y="475" text-anchor="middle">storage/data/{ind}/</text><text class="s" x="595" y="491" text-anchor="middle">{ind}.psv (base table)</text><text class="s" x="595" y="505" text-anchor="middle">+ storage/archived/{ind}/</text>
+<path class="l" d="M450 484H498" marker-end="url(#ar)"/>
+<rect class="nb" x="20" y="555" width="430" height="64" rx="8"/><text x="235" y="577" text-anchor="middle" font-weight="600">6. ANALYSIS (analysis.py, after all indicators merged)</text><text class="s" x="235" y="595" text-anchor="middle">load 4 base .psv into DuckDB; run sql/code/analysis.sql</text><text class="s" x="235" y="609" text-anchor="middle">write sql/analysis/life_expectancy_by_gdp_per_capita.psv</text>
+<path class="l" d="M595 513V535H235V553" marker-end="url(#ar)"/>
+<rect class="n" x="500" y="565" width="190" height="44" rx="8"/><text x="595" y="585" text-anchor="middle">sql/analysis/*.psv</text><text class="s" x="595" y="599" text-anchor="middle">sql/code/analysis.sql</text>
+<path class="l" d="M450 587H498" marker-end="url(#ar)"/>
+<text class="s" x="720" y="470">Dashed red = failure path.</text>
+<text class="s" x="720" y="486">Steps 1-5 repeat per</text><text class="s" x="720" y="500">indicator, in config order.</text>
+</svg>
+<details><summary>Design principles</summary><div><ul>
+<li><b>Small restart unit.</b> The unit of work is (country, indicator). A pull's pages live only in memory until the pull is complete and schema-checked, then are written atomically. A failure never leaves a partial landing file; a crash during the page renames can leave a partial page set, which is always detected (section 6).</li>
+<li><b>Fail loudly.</b> Every failure raises a specific exception with a clear message; the entrypoint maps it to a non-zero exit code. No silent drops, no swallowed exceptions.</li>
+<li><b>Config over code.</b> Only structural constants live in code (column names of the flattened record, lineage column names).</li>
+<li><b>Injectable seams.</b> <code>http_get</code>, <code>sleep</code> and <code>now</code> are keyword parameters with real defaults (<code>requests.get</code>, <code>time.sleep</code>, <code>lambda: datetime.now(timezone.utc)</code>).</li>
+<li><b>Atomic writes.</b> Every file is written to a temp name in the same directory and renamed with <code>os.replace</code>. A pull's page files are all written as temp files first and renamed only after the whole pull has passed (see section 6); staging verifies the page set is complete.</li>
+</ul></div></details>
+</section>
+
+<section id="config">
+<h2>3. YAML config schema</h2>
+<p>File: <code>config/pipeline.yaml</code>. Loaded and validated by <code>config.load_config</code>. Relative paths resolve against the project root, which is <b>always the parent of the config file's directory</b> (no <code>project_root</code> override), so the pipeline works from any working directory. All resolved paths must be inside the project root (validated).</p>
+<pre><code># config/pipeline.yaml
+api:
+  base_url: https://api.worldbank.org/v2
+  path_template: "country/{country}/indicator/{indicator}"
+  format: json
+  per_page: 3                  # decided default: 7 records => 3 pages per pull. Optional int or digit string ("3" accepted, normalized to int); null/omit = API default (50)
+  timeout_seconds: 30
+
+date_range:
+  start: 2018
+  end: 2024                    # inclusive; sent as date=2018:2024; also used by schema check and analysis
+
+countries: [BRA, CAN, DEU, GBR, IND, JPN, MEX, USA, ZAF]   # ISO3
+
+indicators:
+  - code: SP.POP.TOTL
+    name: Population, total
+    table_name: population_total
+    primary_key: [countryiso3code, date]
+  - code: NY.GDP.MKTP.CD
+    name: GDP, current US dollars
+    table_name: gdp_current_usd
+    primary_key: [countryiso3code, date]
+  - code: NY.GDP.PCAP.CD
+    name: GDP per capita, current US dollars
+    table_name: gdp_per_capita_current_usd
+    primary_key: [countryiso3code, date]
+  - code: SP.DYN.LE00.IN
+    name: Life expectancy at birth, total years
+    table_name: life_expectancy_years
+    primary_key: [countryiso3code, date]
+
+retry:
+  status_codes: [429]          # explicit retryable HTTP statuses
+  retry_on_5xx: true           # any 500-599 is also retryable
+  retry_on_connection_errors: true   # requests.ConnectionError / requests.Timeout
+  sleep_seconds: 60
+  max_retries: 3               # 3 retries after the first attempt = 4 attempts max, then fail (same policy for all causes)
+
+request_id:
+  format: "%Y%m%dT%H%M%S%f"    # strftime; UTC clock; must contain %f
+
+paths:                         # {indicator} is replaced by the indicator code
+  landing:   storage/landing/{indicator}
+  staging:   storage/staging/{indicator}
+  archived:  storage/archived/{indicator}
+  rejected:  storage/rejected/{indicator}      # landing files that were superseded or invalid (see section 4)
+  staging_failed_marker: storage/staging/{indicator}/staging_failed_request_ids.txt   # re-pull marker (section 9)
+  data:      storage/data/{indicator}
+  request_log: log/{indicator}
+  row_count_reports: tests/{indicator}/row_count
+  run_log:   log/pipeline.log
+  analysis_out: sql/analysis
+  analysis_sql: sql/code/analysis.sql
+
+analysis:
+  output_file: life_expectancy_by_gdp_per_capita.psv
+  tables:                      # stable view names the SQL file refers to -> indicator codes
+    life_expectancy: SP.DYN.LE00.IN
+    gdp_per_capita:  NY.GDP.PCAP.CD
+</code></pre>
+<h3>Validation rules (<code>validate_config</code>)</h3>
+<ul>
+<li>Required keys present; <code>countries</code> and <code>indicators</code> non-empty; no duplicates; <code>start &lt;= end</code> (ints).</li>
+<li>Each country matches <code>^[A-Z]{3}$</code> (ISO3). <code>api.path_template</code> contains <code>{country}</code> and <code>{indicator}</code>. <code>api.per_page</code> is null, a positive int or a digit string.</li>
+<li><code>request_id.format</code> must match <code>^%Y%m%d[^%]*%H[^%]*%M[^%]*%S[^%]*%f$</code> (year, month, day, hour, minute, second, microsecond in that order, only literal non-<code>%</code> separators), so ids are fixed-width and <b>sort lexicographically in chronological order</b> (the keep-newest rule depends on it). Validation renders two sample timestamps and asserts order and equal width; the rendered id must contain none of <code>; | / _</code> or whitespace (so landing file names parse unambiguously).</li>
+<li>Each indicator has <code>code</code>, <code>name</code>, <code>table_name</code>, <code>primary_key</code>: a non-empty list that is a subset of the business columns (<code>countryiso3code, date, indicator_id, indicator_name, country_id, country_name, value, unit, obs_status, decimal</code>), so <code>request_id</code>/<code>staging_merge_id</code> are never allowed. <b>The primary key must include <code>countryiso3code</code></b> (the column that varies across pulls). A key without it would make every multi-country staging a duplicate-key failure and cause endless re-pulls, so it is rejected with a <code>ConfigError</code>.</li>
+<li><code>retry.max_retries &gt;= 0</code>, <code>sleep_seconds &gt;= 0</code>, <code>retry_on_5xx</code>/<code>retry_on_connection_errors</code> booleans.</li>
+<li><code>analysis.tables</code> values must be configured indicator codes.</li>
+<li>Resolved paths stay inside the project root. Violations raise <code>ConfigError</code>.</li>
+<li>Country and indicator codes must not contain <code>/</code> or <code>|</code>. Landing file names are parsed with the regex <code>^(?P&lt;C&gt;[A-Z]{3})_(?P&lt;I&gt;.+)_(?P&lt;R&gt;[^_]+)_p(?P&lt;N&gt;\d+)\.json$</code> and then checked against the configured country and indicator (indicator codes may contain <code>.</code> but the request_id never contains <code>_</code>).</li>
+</ul>
+<div class="callout">Adding a country = append to <code>countries</code>. Adding an indicator = append a block to <code>indicators</code> (own <code>primary_key</code>, <code>table_name</code>). No code change; folders are created on demand.</div>
+</section>
+
+<section id="layout">
+<h2>4. Folder layout</h2>
+<pre><code>/home/hodge/Lateral
+  README.md                          # Phase 4
+  requirements.txt                   # requests, pandas, duckdb, pyyaml, pytest (pyyaml/pytest added)
+  pytest.ini                         # addopts = --basetemp=.pytest_tmp -p no:cacheprovider  (tmp_path inside the project; conftest deletes it at session end)
+  config/pipeline.yaml
+  src/
+    __init__.py
+    config.py  api.py  schema_check.py  ingest.py  staging.py
+    dq_tests.py  archive.py  merge.py  analysis.py  run_pipeline.py  io_utils.py
+  storage/
+    landing/{indicator}/{C}_{indicator}_{request_id}_p{page}.json   # one file per page; *.part = in-progress temp files
+    staging/{indicator}/{indicator}_staging.psv
+    archived/{indicator}/...json     # all page files of every archived request_id
+    rejected/{indicator}/...json     # landing files moved aside: older duplicates for a pair, refetch replacements,
+                                     # files of countries removed from config, re-pulled row_count/staging failures
+    staging/{indicator}/staging_failed_request_ids.txt   # re-pull marker (section 9), only while non-empty
+    data/{indicator}/{indicator}.psv # base table
+  log/
+    {indicator}/{request_id}.log     # request log, one line
+    pipeline.log                     # run log (operational)
+  tests/
+    test_*.py  conftest.py           # pytest unit tests (Testing agent)
+    {indicator}/row_count/row_count_{checked_at_ts}_{staging_merge_id}.psv   # DQ reports (generated)
+  sql/
+    code/analysis.sql                # the query
+    analysis/life_expectancy_by_gdp_per_capita.psv
+  plan/plan.html
+  Prompt/                            # given
+  .gitignore                         # EXISTING untracked file from the user (currently only <code>.venv/</code>): left as-is, not created or relied upon by this plan</code></pre>
+<p>Note: <code>tests/</code> holds both pytest files and generated reports under <code>tests/{indicator}/row_count/</code>; pytest only collects <code>test_*.py</code> so there is no clash.</p>
+<h3>Git and generated files (decision A13)</h3>
+<ul>
+<li><b>Commit everything.</b> Phase 5 commits the generated data too: <code>storage/</code> (landing is empty after a successful run, archived/staging/data hold files), <code>log/</code>, <code>tests/*/row_count/</code> reports, <code>sql/analysis/</code> output. The plan states no git-ignore for any of them.</li>
+<li><b>Existing <code>.gitignore</code>.</b> The repo root already has an <em>untracked</em> <code>.gitignore</code> created by the user (contents at planning time: <code>.venv/</code> only). The plan leaves it untouched and does not rely on it for any pipeline behavior. Because Phase 5 must still never commit the virtual environment, bytecode or pytest scratch, Phase 5 stages by <b>explicit pathspec</b> (<code>git add config src tests sql storage log plan Prompt README.md requirements.txt pytest.ini</code> with excludes for <code>__pycache__</code>, <code>.pytest_tmp</code>, <code>.pytest_cache</code>, <code>.venv</code>) and checks <code>git status</code> first. Flagged for the human in section 17 (O1): whether to commit that <code>.gitignore</code> as is.</li>
+<li><b>pytest temp files (decision).</b> <code>pytest.ini</code> sets <code>addopts = --basetemp=.pytest_tmp -p no:cacheprovider</code>, so <code>tmp_path</code> stays inside <code>/home/hodge/Lateral</code> (never <code>/tmp</code>) and no <code>.pytest_cache</code> is created. Because nothing is git-ignored, <code>conftest.py</code> must delete <code>.pytest_tmp</code> at session end (<code>pytest_sessionfinish</code>, <code>shutil.rmtree(..., ignore_errors=True)</code>), so no test scratch remains to be committed. Tests run from the project root; running with <code>PYTHONDONTWRITEBYTECODE=1</code> is recommended and <code>__pycache__</code> is excluded by the explicit pathspec.</li>
+</ul>
+<p>New dependency: <code>pyyaml</code>, plus <code>pytest</code> for tests. Both listed in <code>requirements.txt</code>.</p>
+</section>
+
+<section id="modules">
+<h2>5. Module and function breakdown</h2>
+<p>Procedural, no classes except exception types. These names and signatures are the <b>contract</b> the Testing agent writes against; the Coding agent must implement them as written. Type hints: <code>Cfg = dict</code> (validated config), <code>Path = pathlib.Path</code>, <code>DF = pandas.DataFrame</code>. Optional seams are keyword-only parameters.</p>
+<input class="filter" id="fnfilter" placeholder="Filter functions (name, module, text)">
+<h3>Exceptions (<code>src/errors.py</code>-style, defined in the module noted)</h3>
+<div class="tw"><table>
+<tr><th>Exception</th><th>Module</th><th>Raised when</th><th>Exit code</th></tr>
+<tr><td><code>ConfigError</code></td><td>config</td><td>invalid/missing config</td><td>2</td></tr>
+<tr><td><code>RetryExhausted</code></td><td>api</td><td>a retryable failure (429, 5xx, <code>requests.ConnectionError</code>/<code>Timeout</code>) persisted after <code>max_retries</code> retries; carries <code>.url</code>, <code>.attempts</code>, <code>.last_cause</code></td><td>3</td></tr>
+<tr><td><code>RateLimitExhausted</code> (subclass of <code>RetryExhausted</code>)</td><td>api</td><td>the last failure was a 429</td><td>3</td></tr>
+<tr><td><code>ApiHttpError</code></td><td>api</td><td>non-retryable failure: 4xx other than 429, HTTP 200 with a body that is not JSON, any other <code>requests.RequestException</code> (wrapped, original chained)</td><td>3</td></tr>
+<tr><td><code>SchemaCheckError</code> (has <code>.errors: list[str]</code>)</td><td>schema_check</td><td>any schema violation</td><td>4</td></tr>
+<tr><td><code>RowCountFailure</code> (has <code>.failed: list[dict]</code>)</td><td>dq_tests</td><td>any request_id FAIL</td><td>5</td></tr>
+<tr><td><code>StagingError</code></td><td>staging</td><td>duplicate PK, pipe/newline in a staging field (<code>build_staging</code> catches the <code>ValueError</code> from <code>write_psv</code> and re-raises as <code>StagingError</code>), unreadable/mismatched landing file, <b>incomplete or inconsistent page set for a request_id</b>. Carries <code>.request_ids</code> when tied to landing files.</td><td>6</td></tr>
+<tr><td><code>MergeError</code></td><td>merge</td><td>base/staging column mismatch, duplicate PK in base, or a pipe/newline <code>ValueError</code> from <code>write_psv</code> re-raised by <code>merge_indicator</code></td><td>7</td></tr>
+<tr><td><code>FileCollisionError</code></td><td>io_utils/ingest/archive</td><td>request_id log/landing path already exists, archive/rejected target already exists</td><td>8</td></tr>
+<tr><td><code>AnalysisError</code></td><td>analysis</td><td>missing base file (e.g. analysis after <code>--indicator</code> subset on a fresh machine), any <code>duckdb.Error</code> (wrapped), missing SQL file</td><td>9</td></tr>
+</table></div>
+<p>All inherit from <code>PipelineError(Exception)</code>; <code>main</code> catches <code>PipelineError</code> and returns its code, prints a one-line message to stderr, and logs it. A bare <code>PipelineError</code> is never raised: every raise site uses one of the subclasses above. Any other unexpected exception is logged with traceback and <code>main</code> returns exit code <b>1</b>. <code>write_psv</code> itself raises plain <code>ValueError</code>; callers convert it as shown, so there is no contradiction.</p>
+
+<div class="tw"><table id="fntable">
+<tr><th>Module</th><th>Function</th><th>Inputs</th><th>Output / effect</th></tr>
+<tr><td>config</td><td><code>load_config(path)</code></td><td>YAML path</td><td>validated <code>Cfg</code> with <code>cfg["_root"]: Path</code> = parent of the config file's directory</td></tr>
+<tr><td>config</td><td><code>validate_config(cfg)</code></td><td>raw dict</td><td>None or <code>ConfigError</code></td></tr>
+<tr><td>config</td><td><code>resolve_path(cfg, key, indicator=None)</code></td><td>key in <code>paths</code>, indicator code</td><td>absolute <code>Path</code> (template filled, inside root). Does not create it.</td></tr>
+<tr><td>config</td><td><code>get_indicator(cfg, code)</code></td><td>code</td><td>indicator dict or <code>ConfigError</code></td></tr>
+<tr><td>io_utils</td><td><code>atomic_write_text(path, text)</code></td><td>Path, str</td><td>creates parents; temp file + <code>os.replace</code></td></tr>
+<tr><td>io_utils</td><td><code>write_psv(df, path)</code></td><td>all-str DF, Path</td><td>atomic pipe-delimited write, header, no index, <code>lineterminator="\n"</code>, empty string for null; raises <code>ValueError</code> if any field contains <code>|</code>, <code>\n</code> or <code>\r</code></td></tr>
+<tr><td>io_utils</td><td><code>read_psv(path)</code></td><td>Path</td><td>DF read with <code>sep="|", dtype=str, keep_default_na=False</code></td></tr>
+<tr><td>api</td><td><code>build_url(cfg, country, indicator_code, page)</code></td><td>config, ISO3, code, page int</td><td>str: <code>{base_url}/{path_template filled with country, indicator}?format=json&amp;date=S:E&amp;per_page=N&amp;page=P</code> (<code>per_page</code> omitted if null). <b>Uses <code>api.path_template</code> from config</b>; nothing hardcoded.</td></tr>
+<tr><td>api</td><td><code>generate_request_id(cfg, *, now=_utc_now)</code></td><td>config, <code>now</code>: zero-arg callable returning an <b>aware UTC datetime</b></td><td>str, 21 chars with the default format, e.g. <code>20261108T153045123456</code> (strftime from config). Default <code>now = lambda: datetime.now(timezone.utc)</code>. The same <code>now</code> callable type is accepted by <code>ingest_pair</code>, <code>ingest_indicator</code>, <code>run_indicator</code>, <code>run_all</code> and <code>main</code>; every pull calls it once, so a fake that returns successive times gives distinct ids.</td></tr>
+<tr><td>api</td><td><code>fetch_page(url, cfg, *, http_get=requests.get, sleep=time.sleep)</code></td><td>URL</td><td>parsed JSON (list/dict). Calls <code>http_get(url, timeout=cfg.api.timeout_seconds)</code>. <b>Retryable</b> = status in <code>retry.status_codes</code> (429), or any 500-599 when <code>retry_on_5xx</code>, or <code>requests.ConnectionError</code>/<code>requests.Timeout</code> raised by <code>http_get</code> when <code>retry_on_connection_errors</code>. On a retryable failure: <code>sleep(retry.sleep_seconds)</code> and retry the same URL, up to <code>max_retries</code> retries in total (counter per page request, causes may be mixed), then <code>RateLimitExhausted</code> (last cause 429) or <code>RetryExhausted</code>. <b>Non-retryable</b>: other 4xx, 200 with non-JSON body, other <code>requests.RequestException</code>: <code>ApiHttpError</code> immediately, no sleep.</td></tr>
+<tr><td>api</td><td><code>fetch_pull(cfg, country, indicator_code, request_id, *, http_get=..., sleep=...)</code></td><td>one pull</td><td><code>list[page_response]</code> (page 1..N in order, raw 2-element arrays). Fetches page 1, schema-checks it, reads <code>pages</code>, loops 2..pages, schema-checks each, verifies cross-page consistency (see 6/7) <b>and primary-key uniqueness across all pages of the pull (raises <code>SchemaCheckError</code>, nothing written)</b>. Same <code>request_id</code> is used for the whole pull; the function never generates one.</td></tr>
+<tr><td>schema_check</td><td><code>schema_check(page_response, cfg, country, indicator_code, expected_page)</code></td><td>raw page response</td><td>None or <code>SchemaCheckError(errors)</code> with all violations (see 7)</td></tr>
+<tr><td>ingest</td><td><code>landing_filename(country, indicator_code, request_id, page)</code></td><td>strs, page int</td><td><code>"{C}_{I}_{R}_p{page}.json"</code> (no zero padding, e.g. <code>BRA_SP.POP.TOTL_20261108T153045123456_p1.json</code>)</td></tr>
+<tr><td>ingest</td><td><code>format_log_line(request_id, total, pages, country, indicator_code)</code></td><td></td><td><code>"rid|total|pages|C|I"</code> (no newline)</td></tr>
+<tr><td>ingest</td><td><code>write_request_log(cfg, request_id, total, pages, country, indicator_code)</code></td><td></td><td>Path <code>log/{I}/{R}.log</code>, one line + <code>\n</code></td></tr>
+<tr><td>ingest</td><td><code>write_landing_pages(cfg, country, indicator_code, request_id, pages)</code></td><td>list of raw pages</td><td>list[Path], one file per page, each containing exactly that page's raw 2-element array (JSON). <b>Atomic as a set:</b> every page is first written to <code>&lt;name&gt;.part</code>; only when all temp files exist are they renamed (<code>os.replace</code>) to final names. A crash before the renames leaves only <code>*.part</code> files (never listed as landing; removed at the start of the next ingest). A crash in the middle of the renames leaves an incomplete page set, which staging and ingest both detect via the completeness check and treat as invalid (section 6). Raises <code>FileCollisionError</code> if any final name exists.</td></tr>
+<tr><td>ingest</td><td><code>find_existing_landing(cfg, indicator_code, country)</code></td><td></td><td><code>dict[request_id -&gt; list[Path]]</code> of landing files for that pair grouped by request_id (page files sorted by page number); keys iterate in ascending request_id order. Names parsed with the regex in section 3.</td></tr>
+<tr><td>ingest</td><td><code>check_page_set(pages_by_number)</code></td><td>dict page-number -&gt; raw response</td><td>None or <code>StagingError</code>: page numbers must be exactly <code>1..pages</code> (<code>pages</code> from response metadata), every file's <code>pages</code> and <code>total</code> equal, and each file's metadata <code>page</code> equals the number in its file name. Used by staging and by ingest.</td></tr>
+<tr><td>ingest</td><td><code>move_request_files(cfg, indicator_code, request_id, dest_key)</code></td><td>dest_key: <code>"archived"</code> or <code>"rejected"</code></td><td>moves <b>all page files of that request_id together</b> (checks every target first; <code>FileCollisionError</code> if any exists, nothing moved), returns list[Path]. Used by archive and by rejection.</td></tr>
+<tr><td>ingest</td><td><code>failed_request_ids(cfg, indicator_code)</code></td><td></td><td>set[str] of request_ids to re-pull: FAIL rows in the <b>latest</b> row_count report (rule in section 9) union the ids in the staging-failure marker (<code>paths.staging_failed_marker</code>). Marker spec: plain text, <b>one request_id per line</b>; written atomically as the <b>sorted union</b> of the existing ids and the new ids (<code>mark_staging_failed(cfg, I, request_ids)</code>); an id is removed (<code>clear_staging_marks</code>) when its landing files move to <code>rejected/</code> (also ids with no remaining files); the file is deleted when it becomes empty. Empty set if none.</td></tr>
+<tr><td>ingest</td><td><code>ingest_pair(cfg, country, indicator_code, *, http_get=..., sleep=..., now=...)</code></td><td></td><td>dict <code>{request_id,total,pages,landing_paths,log_path}</code>. Generates request_id, <code>fetch_pull</code> (all pages, schema check, PK uniqueness), then writes the log, then <code>write_landing_pages</code>. Nothing is written if the pull fails; a failure while writing removes any <code>*.part</code> files it created.</td></tr>
+<tr><td>ingest</td><td><code>ingest_indicator(cfg, indicator_code, *, refetch=False, http_get=..., sleep=..., now=...)</code></td><td></td><td>list of ingest_pair results. Recovery rule, pinned (B2): per pair, group landing files by request_id and <b>keep only the newest request_id group (highest request_id); every older group is moved to <code>rejected/</code> (all of its page files together)</b> (done at the start of ingest and again after any new file lands, so a crash between the two steps self-heals). Then: skip the pair if its newest group exists, is <b>complete</b> (<code>check_page_set</code>) and its request_id is not in <code>failed_request_ids</code> (resume); an incomplete newest group (crash mid-write) is moved to <code>rejected/</code> and the pair is pulled again. Otherwise pull a new request_id, after which the previous group(s) go to <code>rejected/</code>. <code>refetch=True</code> pulls every pair anew and rejects all older groups. Landing groups whose country is not in the current config are moved to <code>rejected/</code> with a WARNING (decision A15). Stale <code>*.part</code> files are deleted first.</td></tr>
+<tr><td>staging</td><td><code>read_landing_file(path)</code></td><td></td><td><code>(country, indicator_code, request_id, page, response)</code> parsed from name + content (response must be a 2-element list); <code>StagingError</code> on mismatch or unreadable JSON</td></tr>
+<tr><td>staging</td><td><code>flatten_records(pages, request_id)</code></td><td>list of raw page responses of one request_id</td><td>all-str DF (one request_id's pages concatenated in page order) with columns <code>countryiso3code,date,indicator_id,indicator_name,country_id,country_name,value,unit,obs_status,decimal,request_id</code>. <b>String conversion is pinned per record before the DataFrame is built:</b> <code>None -&gt; ""</code>, <code>int -&gt; str(int)</code>, <code>float -&gt; repr(float)</code>, <code>str</code> unchanged (never <code>float()</code> on ints; avoids pandas turning an int column with nulls into floats).</td></tr>
+<tr><td>staging</td><td><code>build_country_frames(cfg, indicator_code)</code></td><td></td><td><code>dict[request_id -&gt; {"country": C, "frame": DF}]</code>. For each request_id: collect its page files, <code>check_page_set</code> (page set 1..pages complete and consistent), then <b>concatenate all of its pages into one per-country frame</b> (this is the frame that <code>row_count_test</code> measures, taken before the country frames are combined). Re-runs <code>schema_check</code> on both elements of every page of every landing file against the <b>current config</b> (country, indicator, date range), so leftover files from an old config fail. <b>Design (N2): a re-check failure is caught and re-raised as <code>StagingError</code> (exit 6) with <code>.request_ids</code> = that file's id</b>, never as a bare <code>SchemaCheckError</code>; <code>SchemaCheckError</code> only ever comes from a live pull and carries no request_ids. <code>StagingError</code> (with that request_id) for an incomplete/inconsistent page set; <code>StagingError</code> if &gt;1 request_id per pair (cannot happen after ingest recovery).</td></tr>
+<tr><td>staging</td><td><code>combine_frames(frames, pk)</code></td><td>frames dict, PK cols</td><td>one DF, sorted by PK; <code>StagingError</code> (with the offending <code>request_ids</code>) on duplicate PK</td></tr>
+<tr><td>staging</td><td><code>new_staging_merge_id()</code></td><td></td><td><code>str(uuid.uuid4())</code></td></tr>
+<tr><td>staging</td><td><code>build_staging(cfg, indicator_code)</code></td><td></td><td><code>(staging_df, frames, staging_merge_id, staging_path)</code>; writes the .psv with <code>staging_merge_id</code> column</td></tr>
+<tr><td>dq_tests</td><td><code>read_request_log(cfg, indicator_code, request_id)</code></td><td></td><td>dict <code>{request_id,total,pages,country,indicator}</code>; returns dict; raises <code>FileNotFoundError</code>/<code>ValueError</code> for a missing or malformed log, which <code>row_count_test</code> converts to a FAIL row (see 9)</td></tr>
+<tr><td>dq_tests</td><td><code>row_count_test(cfg, indicator_code, frames)</code></td><td></td><td><code>list[dict]</code> per request_id: <code>request_id,country_code,indicator_code,expected_total,actual_rows,status,detail</code></td></tr>
+<tr><td>dq_tests</td><td><code>write_row_count_report(cfg, indicator_code, results, staging_merge_id)</code></td><td></td><td>Path <code>tests/{I}/row_count/row_count_{checked_at_ts}_{staging_merge_id}.psv</code>, <code>checked_at_ts</code> = UTC <code>%Y%m%dT%H%M%S%f</code> so names sort chronologically</td></tr>
+<tr><td>ingest</td><td><code>mark_staging_failed(cfg, indicator_code, request_ids)</code> / <code>clear_staging_marks(cfg, indicator_code, request_ids)</code></td><td></td><td>maintain the marker file as specified under <code>failed_request_ids</code></td></tr>
+<tr><td>dq_tests</td><td><code>latest_report(cfg, indicator_code)</code></td><td></td><td>Path or None: among files matching the glob <code>row_count_*.psv</code> only (the marker file and anything else are ignored), the one with the lexicographically greatest name (sortable timestamp prefix)</td></tr>
+<tr><td>dq_tests</td><td><code>assert_row_count_passed(results)</code></td><td></td><td>None or <code>RowCountFailure</code></td></tr>
+<tr><td>archive</td><td><code>archive_landing(cfg, indicator_code)</code></td><td></td><td>list[Path] new locations in <code>archived/</code>; calls <code>move_request_files</code> per request_id so all page files of a request_id move together; afterwards asserts landing has no files; existing target raises <code>FileCollisionError</code></td></tr>
+<tr><td>merge</td><td><code>parse_lineage(s)</code> / <code>serialize_lineage(ids)</code></td><td>str / list</td><td>list[str] / <code>";"</code>-joined str ("" for empty)</td></tr>
+<tr><td>merge</td><td><code>append_lineage(existing, new_id)</code></td><td>existing str, id</td><td>str; appends only if <code>new_id</code> not already present</td></tr>
+<tr><td>merge</td><td><code>merge_frames(base_df, staging_df, pk)</code></td><td>base (None if first run), staging, PK</td><td>merged DF: business columns + scalar <code>request_id</code>, <code>staging_merge_id</code> (latest) + <code>request_id_linage</code>, <code>staging_merged_id_linage</code>, sorted by PK (see 12)</td></tr>
+<tr><td>merge</td><td><code>merge_indicator(cfg, indicator_code, staging_path)</code></td><td></td><td>Path of rewritten base <code>.psv</code></td></tr>
+<tr><td>merge</td><td><code>merge_leftover_staging(cfg, indicator_code)</code></td><td></td><td>Merges a leftover staging file only if <b>all</b> hold: landing dir empty; staging file exists; its <code>staging_merge_id</code> is not in the base lineage (or base is missing); a row_count report whose name ends <code>_{staging_merge_id}.psv</code> exists and <b>every row is PASS</b>; and for every <code>request_id</code> in the staging file the <b>complete page set</b> <code>p1..p{pages}</code> (<code>pages</code> from that request's log) is present in <code>archived/</code> (proving archive completed). Otherwise it does nothing (staging is left for the normal run to overwrite). Same guards for the base-missing branch. Crash recovery after archive, see 11. Returns Path or None.</td></tr>
+<tr><td>analysis</td><td><code>load_base_tables(con, cfg)</code></td><td>duckdb connection</td><td>creates one table per indicator (<code>table_name</code>) from the base <code>.psv</code> (all 14 columns, no assumption on column count) and one view per <code>analysis.tables</code> alias</td></tr>
+<tr><td>analysis</td><td><code>run_analysis(cfg)</code></td><td></td><td>Path of output <code>.psv</code>; reads SQL from <code>sql/code/analysis.sql</code>, binds <code>$start_year</code>/<code>$end_year</code>. Missing base files or <code>duckdb.Error</code> become <code>AnalysisError</code>.</td></tr>
+<tr><td>run_pipeline</td><td><code>run_indicator(cfg, indicator_code, *, refetch=False, http_get=..., sleep=..., now=...)</code></td><td></td><td>runs <code>merge_leftover_staging</code> then steps 1-5 for one indicator; on any <code>StagingError</code> whose <code>.request_ids</code> is non-empty calls <code>mark_staging_failed</code> before re-raising (the only marker writer); returns summary dict</td></tr>
+<tr><td>run_pipeline</td><td><code>run_all(cfg, *, indicators=None, skip_analysis=False, refetch=False, http_get=..., sleep=..., now=...)</code></td><td></td><td>loops indicators then analysis</td></tr>
+<tr><td>run_pipeline</td><td><code>main(argv=None, *, http_get=requests.get, sleep=time.sleep, now=...)</code></td><td>CLI args + the same seams</td><td>exit code int; forwards the seams to <code>run_all</code>. Arg parsing and exit-code mapping are testable by monkeypatching <code>run_all</code>.</td></tr>
+</table></div>
+</section>
+
+<section id="request-paging">
+<h2>6. request_id and paging design</h2>
+<ul>
+<li><b>One request_id per pull</b> (country+indicator). <code>ingest_pair</code> calls <code>generate_request_id</code> exactly once, before the first page request, and passes it down. All pages, all page files and the log file share it.</li>
+<li><b>Format:</b> UTC <code>strftime("%Y%m%dT%H%M%S%f")</code>, 21 characters (8 date + <code>T</code> + 12 time), e.g. <code>20261108T153045123456</code>. Microseconds plus sequential pulls make collisions practically impossible; <code>ingest_pair</code> additionally refuses to proceed (raises <code>FileCollisionError</code>, exit 8) if the log path or any target page-file path already exists, rather than overwrite. <code>now</code> is a zero-arg callable returning an aware UTC datetime (default <code>lambda: datetime.now(timezone.utc)</code>), called once per pull.</li>
+<li><b>Paging:</b> request page 1 (<code>per_page</code> from config, default 3); read <code>pages</code> from that response's metadata (array element 0); request pages 2..<code>pages</code>. Per-page checks: metadata <code>page</code> equals the requested page, <code>pages</code> equals the first response's <code>pages</code>, <code>total</code> equals the first response's <code>total</code>. Any mismatch is a <code>SchemaCheckError</code> (a dataset drifting mid-pull means the pull restarts, the stated restart policy). With 7 records and <code>per_page=3</code> the live API gives <code>pages=3</code> (3+3+1 records); the per-page record count is not asserted, only the total (by <code>row_count</code>).</li>
+<li><b>Primary-key uniqueness across pages:</b> after all pages are fetched, <code>fetch_pull</code> flattens the records, and if any configured-PK value repeats (the unordered API can repeat a row on one page and drop another while the count still equals <code>total</code>) it raises <code>SchemaCheckError</code>. Nothing is written, so the pull is simply restarted on the next run and a bad landing set can never exist.</li>
+<li><code>pages == 0</code> or <code>total == 0</code> (empty pull) fails (A6).</li>
+<li><b>Recording total and pages:</b> <code>total</code> and <code>pages</code> are taken from the response metadata of the <b>first page request</b> (after its schema check) and held in memory. The log file is <em>written</em> once the whole pull has succeeded, immediately before the page files, so a failed pull leaves no log (A4).</li>
+<li><b>One landing file per page.</b> Landing files are named <code>&lt;C&gt;_&lt;I&gt;_&lt;request_id&gt;_p&lt;page&gt;.json</code> in <code>storage/landing/&lt;I&gt;/</code>; each holds that page's raw, unmodified 2-element response array <code>[metadata, records]</code>. The prompt's name has no page number; the page suffix is a human-approved deviation (A1) that keeps one file = one raw API response.</li>
+</ul>
+<details><summary>Write order, atomic page set and crash windows</summary><div>
+<p>Order after a fully successful pull: (1) log written atomically; (2) every page file written to <code>&lt;name&gt;.part</code>; (3) all <code>.part</code> files renamed to their final names with <code>os.replace</code> (pages in order 1..N).</p>
+<ul>
+<li>Crash during (1) or (2): no final landing file exists; at most an orphan log (harmless: row_count walks landing files, not logs) and <code>*.part</code> files, which are never listed as landing and are deleted at the start of the next ingest.</li>
+<li>Crash during (3): a partial set of final files exists. A partial set is never mistaken for a complete pull because <b>every consumer verifies completeness</b>: <code>check_page_set</code> requires page numbers exactly <code>1..pages</code> (<code>pages</code> from response metadata, identical in all files, each file's metadata <code>page</code> equal to the number in its name). <code>ingest_indicator</code> treats an incomplete newest group as invalid (moved to <code>rejected/</code>, pair re-pulled); staging raises <code>StagingError</code> naming that request_id (marked for re-pull, section 9). The log is checked by row_count only for complete sets.</li>
+<li>A request_id's page files are always moved (archive or rejected) together by <code>move_request_files</code>.</li>
+</ul></div></details>
+</section>
+
+<section id="schema-check">
+<h2>7. Schema check spec</h2>
+<p><code>schema_check(page_response, cfg, country, indicator_code, expected_page)</code> is called on every page <em>immediately</em> after it is parsed and before anything is written. <b>Both elements of every page's response array are checked</b>: element 0 (the response metadata: <code>page, pages, per_page, total, sourceid, lastupdated</code>) and element 1 (the list of records, with every record's shape and types). It collects <b>all</b> violations, then raises <code>SchemaCheckError</code> whose message names country, indicator, page and every error. The pull stops; nothing is written for it; no rows are dropped or coerced. Staging re-runs the same function on every landing page file against the current config.</p>
+<div class="tw"><table>
+<tr><th>Level</th><th>Rule</th></tr>
+<tr><td>Envelope</td><td>Response is a <code>list</code> of length 2. (Length 1 with <code>message</code> = API error body; the message text is included in the error.)</td></tr>
+<tr><td><b>Element 0: response metadata</b></td><td>dict containing keys <code>page, pages, per_page, total, sourceid, lastupdated</code>. Types: <code>page, pages, total</code> are <code>int</code> (not bool); <code>per_page</code> is an <code>int</code> <b>or a digit string</b> (<code>"3"</code>), accepted defensively; <code>sourceid, lastupdated</code> are <code>str</code>. <code>page == expected_page</code>; <code>pages &gt;= 1</code>; <code>total &gt;= 1</code>. Extra metadata keys tolerated with a WARNING.</td></tr>
+<tr><td><b>Element 1: records list</b></td><td>non-empty <code>list</code> of dicts. (<code>null</code> or empty on a configured pair is a failure, A6.) Each record is checked by the rows below; errors are reported with the record's index.</td></tr>
+<tr><td>Record keys</td><td>required keys present: <code>indicator, country, countryiso3code, date, value, unit, obs_status, decimal</code>. Extra unknown keys are tolerated (logged at WARNING; decision A10); missing keys fail. Nested: <code>indicator</code> and <code>country</code> are dicts with <code>id</code> and <code>value</code> (str). Each configured primary-key column must be derivable from the flattened record.</td></tr>
+<tr><td>Record types</td><td><code>countryiso3code</code> str; <code>date</code> str; <code>value</code> int or float or <code>None</code> (bool rejected); <code>unit</code> str; <code>obs_status</code> str; <code>decimal</code> int; <code>indicator.id</code> str; <code>country.id</code> str.</td></tr>
+<tr><td>Record <code>countryiso3code</code></td><td>equals the requested config country (e.g. <code>BRA</code>) and matches <code>^[A-Z]{3}$</code>.</td></tr>
+<tr><td>Record <code>date</code></td><td>matches <code>^\d{4}$</code> and lies within <code>[date_range.start, date_range.end]</code>.</td></tr>
+<tr><td>Record <code>indicator.id</code></td><td>equals the requested config indicator code.</td></tr>
+<tr><td>Cross-page (done by <code>fetch_pull</code>)</td><td><code>pages</code>, <code>total</code> unchanged across pages. <b>PK uniqueness across all pages</b> is asserted in <code>fetch_pull</code> (B1). The sum of records versus <code>total</code> is NOT asserted here: that is exactly the <code>row_count</code> test's job, so the failure is reported in the DQ report.</td></tr>
+</table></div>
+<p><b>Known limitation (R11):</b> the <code>^\d{4}$</code> date rule assumes annual indicators. Adding a monthly/quarterly indicator (<code>2020M01</code>, <code>2020Q1</code>) needs a per-indicator <code>date_pattern</code> config key; out of scope now.</p>
+<div class="callout warn">Schema check validates structure and identity. It does not decide "is the value plausible". Null <code>value</code> is allowed and carried through.</div>
+</section>
+
+<section id="logging">
+<h2>8. Request log format</h2>
+<ul>
+<li>Path: <code>log/&lt;indicator-code&gt;/&lt;request_id&gt;.log</code>, <b>one file per request_id</b> (per pull, not per page file).</li>
+<li>Content: exactly one line, pipe-delimited, terminated by <code>\n</code>, no header:
+<pre><code>request_id|total|pages|country_code|indicator_code
+20261108T153045123456|7|3|BRA|SP.POP.TOTL</code></pre></li>
+<li><code>total</code> and <code>pages</code> come from the response metadata (array element 0) of the first page request; with the default <code>per_page=3</code> a pull of 7 records logs <code>pages=3</code>. <code>country_code</code> is the ISO3 code from config (the requested country).</li>
+<li>Reader <code>dq_tests.read_request_log</code> splits on <code>|</code>, requires exactly 5 fields, ints for 2 and 3, and that field 1 equals the file stem.</li>
+<li>Separate operational run log: Python <code>logging</code> to stderr and <code>log/pipeline.log</code>, format <code>%(asctime)s %(levelname)s %(message)s</code>. This is not the request log and has no tests tied to its format.</li>
+</ul>
+</section>
+
+<section id="row-count">
+<h2>9. row_count test spec and report format</h2>
+<h3>Algorithm (<code>row_count_test</code>)</h3>
+<ol>
+<li>Input: <code>frames</code> from <code>build_country_frames</code>: one entry per request_id whose DataFrame is the <b>concatenation of all that request_id's page files</b> (the per-country frame), <b>captured before <code>combine_frames</code></b>.</li>
+<li>For each request_id: read its log, <code>expected_total = total</code>; <code>actual_rows = len(frame)</code> (all records across all pages, including null-valued rows).</li>
+<li><code>status = PASS</code> if equal else <code>FAIL</code>. A missing/malformed log, or a country in the log that differs from the landing file names, is <code>FAIL</code> with an explanatory <code>detail</code> (never an unhandled exception).</li>
+<li>Write the report even when failing, then <code>assert_row_count_passed</code> raises <code>RowCountFailure</code> if any FAIL.</li>
+</ol>
+<h3>Report</h3>
+<p>Path: <code>tests/&lt;indicator-code&gt;/row_count/row_count_&lt;checked_at_ts&gt;_&lt;staging_merge_id&gt;.psv</code> where <code>checked_at_ts</code> is UTC <code>%Y%m%dT%H%M%S%f</code>. One file per test run, one row per request_id, pipe-delimited, with header (one-report-per-run layout is an accepted interpretation of &ldquo;a pass/fail report per request_id&rdquo;, A12):</p>
+<pre><code>request_id|country_code|indicator_code|expected_total|actual_rows|status|detail|staging_merge_id|checked_at
+20261108T153045123456|BRA|SP.POP.TOTL|7|7|PASS||c0a8...|2026-11-08T15:31:02Z
+20261108T153047001122|CAN|SP.POP.TOTL|7|6|FAIL|log total 7 != dataframe rows 6|c0a8...|2026-11-08T15:31:02Z</code></pre>
+<h3>Failure behavior (decision A2)</h3>
+<ul>
+<li>Any FAIL for an indicator: <b>halt the whole pipeline</b> (non-zero exit 5) <em>before archive and merge</em> of that indicator. Landing files and the staging file stay in place; the base table is untouched.</li>
+<li>Indicators already fully merged earlier in the same run stay merged (their merge is idempotent and valid). Later indicators are not started. Analysis does not run.</li>
+<li><b>&ldquo;Latest report&rdquo; rule (B3):</b> among files matching <code>row_count_*.psv</code>, the one whose filename is lexicographically greatest, which equals the most recent <code>checked_at_ts</code>. Ties are impossible (microsecond timestamp + uuid) but mtime would be the documented tiebreak.</li>
+<li><b>Rerun:</b> <code>ingest_indicator</code> reads the latest report; for FAIL request_ids it re-pulls only that country (new request_id), moves the superseded request_id's page files together to <code>storage/rejected/&lt;ind&gt;/</code>, and keeps PASS landing sets as they are. Staging is rebuilt (new <code>staging_merge_id</code>) and the test reruns.</li>
+<li><b>Staging failures are treated like FAILs (B1, N2):</b> every staging-time problem tied to landing files is a <code>StagingError</code> carrying <code>.request_ids</code> (duplicate PK, leftover file failing the current-config schema re-check, unreadable/mismatched file, incomplete or inconsistent page set). <code>run_indicator</code> writes those ids to the marker file (<code>paths.staging_failed_marker</code>, spec under <code>failed_request_ids</code>, section 5); <code>failed_request_ids</code> returns them, so the next run re-pulls just those pairs and clears the marks when the old files move to <code>rejected/</code>. No deadlock. Duplicate PK that spans different request_ids is only possible with a bad primary key, which config validation rejects (N6).</li>
+</ul>
+</section>
+
+<section id="staging">
+<h2>10. Staging and staging_merge_id</h2>
+<ol>
+<li><code>build_country_frames</code> lists <code>landing/&lt;I&gt;/*.json</code> grouped by request_id, verifies each group's page set is complete and consistent (<code>check_page_set</code>), re-runs <code>schema_check</code> (both array elements) on each page against the current config (stale files from a removed country or different date range fail with request_id attached), and concatenates a request_id's pages (<code>flatten_records</code>) into <b>one per-country frame</b>, all columns as strings using the pinned conversion (None to empty, int to <code>str</code>, float to <code>repr</code>). At most one request_id per (country, indicator) is allowed; otherwise <code>StagingError</code> (ingest recovery guarantees this).</li>
+<li>Frames are kept in the dict keyed by request_id for the row_count test.</li>
+<li><code>combine_frames</code> concatenates, sorts by PK, and asserts PK uniqueness (a duplicate would mean the unordered API paging produced a repeat; fail loudly). It only stacks the per-country frames into the staging table; it does no upsert. The upsert is <code>merge_frames</code> (section 12). A pipe/newline in any field makes <code>write_psv</code> raise <code>ValueError</code>, which <code>build_staging</code> re-raises as <code>StagingError</code>.</li>
+<li><code>new_staging_merge_id()</code> = <code>uuid4</code>, generated when the staging table is created, added as column <code>staging_merge_id</code> (same value on every row).</li>
+<li>Output file: <code>storage/staging/&lt;I&gt;/&lt;I&gt;_staging.psv</code>, a stable name overwritten each run (staging is a transient table; decision A9). Columns: <code>countryiso3code|date|indicator_id|indicator_name|country_id|country_name|value|unit|obs_status|decimal|request_id|staging_merge_id</code>.</li>
+</ol>
+<p>Order in the run: stage, then row_count test, then archive. The staging file is written <em>before</em> the test (spec step 2 then 3) and is not deleted on failure.</p>
+</section>
+
+<section id="archive">
+<h2>11. Archive step</h2>
+<ul>
+<li>Only called after <code>assert_row_count_passed</code> succeeds.</li>
+<li><code>archive_landing</code> calls <code>move_request_files</code> for each request_id: all page files of that request_id are moved together (<code>shutil.move</code>, effectively a rename on the same filesystem) to <code>storage/archived/&lt;I&gt;/</code>. All targets are checked first; names embed request_id and page, so there are no collisions, and a pre-existing target raises <code>FileCollisionError</code> (exit 8) with nothing moved.</li>
+<li>Postcondition: landing directory for the indicator contains no files (asserted).</li>
+<li><b>Crash window archive to merge (R2):</b> the staging file survives while landing is empty. At the start of <code>run_indicator</code>, <code>merge_leftover_staging</code> checks: landing empty, staging file present, its <code>staging_merge_id</code> not found in the base <code>staging_merged_id_linage</code> column (or base missing), <b>a row_count report for that <code>staging_merge_id</code> exists with every row PASS, and for every request_id in the staging file the complete page set <code>p1..p{pages}</code> is in <code>archived/</code></b> &rarr; merge it first. This guard (also on the base-missing branch) guarantees staging that failed row_count, or whose archive never finished, is never merged. Then the run proceeds normally with fresh pulls. If the staging id is already in the lineage nothing happens, and if it were merged twice the lineage guard (12) makes it a no-op. A leftover staging file is never merged while landing files exist (the run is about to overwrite it).</li>
+</ul>
+</section>
+
+<section id="merge">
+<h2>12. Merge / upsert design</h2>
+<h3>Inputs and typing</h3>
+<p>Staging and base are both read with <code>read_psv</code> (<code>dtype=str, keep_default_na=False</code>). All business values are compared and written as the <em>same strings</em> the staging file contains, so no float round-trip or dtype inference can alter them (e.g. <code>2185821610689.31</code> stays textual; <code>date</code> keeps leading format). Staging values were produced once from the JSON by the pinned per-record conversion in section 5 (<code>None</code> to empty, <code>int</code> via <code>str</code>, <code>float</code> via <code>repr</code>, strings unchanged); <code>repr(float)</code> is shortest-round-trip. Merge never re-converts them.</p>
+<h3>Columns</h3>
+<p>Base columns (14, in this order):</p>
+<ul>
+<li><b>Business columns (10):</b> <code>countryiso3code, date, indicator_id, indicator_name, country_id, country_name, value, unit, obs_status, decimal</code>.</li>
+<li><b>Latest-id scalars (2), decision A19:</b> <code>request_id</code> and <code>staging_merge_id</code>, always the <em>latest</em> value for that row: overwritten on every update and set on every insert.</li>
+<li><b>Lineage lists (2):</b> <code>request_id_linage</code> and <code>staging_merged_id_linage</code> (history, appended). (Note the intentionally different spellings: <code>staging_merge_id</code> scalar, <code>staging_merged_id_linage</code> list, as specified.)</li>
+</ul>
+<p>Only the 10 business columns can be primary-key columns. On an identical rerun the business values stay identical, while <code>request_id</code>, <code>staging_merge_id</code> and both lineage lists change.</p>
+<h3>Algorithm (<code>merge_frames</code>)</h3>
+<ol>
+<li>If base is missing (<code>storage/data/&lt;I&gt;/&lt;I&gt;.psv</code> absent): <b>first run</b> = every staging row is inserted with scalar <code>request_id</code>/<code>staging_merge_id</code> copied from staging, <code>request_id_linage = request_id</code> and <code>staging_merged_id_linage = staging_merge_id</code>.</li>
+<li>Else index both frames by the configured PK (composite). Assert base PK unique (<code>MergeError</code>) and base business columns match staging (<code>MergeError</code> on schema drift).</li>
+<li><b>Existing key (in both):</b> overwrite all business columns from staging (update); <b>overwrite the scalars</b> <code>request_id</code> and <code>staging_merge_id</code> with the staging row's values; <code>request_id_linage = append_lineage(old, row.request_id)</code>; <code>staging_merged_id_linage = append_lineage(old, row.staging_merge_id)</code>.</li>
+<li><b>New key (staging only):</b> insert with the scalars from staging and single-element lineage lists.</li>
+<li><b>Key only in base:</b> kept untouched: values, scalars and lineage unchanged (no delete; decision A5).</li>
+<li>Sort by PK, write with <code>write_psv</code> atomically (temp file + <code>os.replace</code>) to the same path, overwriting.</li>
+</ol>
+<h3>Serialization choice: <code>;</code>-joined string</h3>
+<div class="tw"><table>
+<tr><th>Option</th><th>For</th><th>Against</th></tr>
+<tr><td><b>Chosen: <code>id1;id2;id3</code></b></td><td>No quote characters, so the psv needs no CSV quoting; human-readable; trivial append; DuckDB can <code>string_split(col, ';')</code>. Request ids (<code>[0-9T]</code>) and UUIDs (<code>[0-9a-f-]</code>) never contain <code>;</code> or <code>|</code>; <code>append_lineage</code> asserts this.</td><td>Not self-describing as a list; breaks if future ids contain <code>;</code> (assertion catches it).</td></tr>
+<tr><td>JSON array</td><td>Robust, typed</td><td>Contains <code>"</code> and <code>,</code>, so the pipe file would get CSV-quoted/escaped fields; noisy.</td></tr>
+</table></div>
+<p>Empty/missing lineage reads as <code>[]</code>. A cell is never <code>null</code>; it is "" or a list.</p>
+<h3>Dedupe</h3>
+<ul>
+<li><code>append_lineage</code> appends <code>new_id</code> only when it is not already in the list. Within one real run each id is new, so each rerun grows each list by exactly one per row touched; replaying the <em>same</em> merge (same staging file) appends nothing.</li>
+<li>PK duplicates are rejected earlier (staging) and in base (merge).</li>
+</ul>
+<h3>Idempotency proof sketch</h3>
+<ol>
+<li>Let <code>B</code> be base and <code>S</code> staging. Business part of <code>merge(B,S)</code> is a function of <code>S</code> on keys of <code>S</code> and of <code>B</code> elsewhere: <code>biz(M)[k] = S[k]</code> for <code>k in S</code>, else <code>B[k]</code>.</li>
+<li>Applying it again with the same <code>S</code> gives <code>biz(M2)[k] = S[k]</code> for <code>k in S</code>, else <code>M[k] = B[k]</code>: identical to <code>biz(M)</code>. So business data is a fixed point (strings are never reinterpreted, and sorting is deterministic, so the business bytes are identical). The same argument applies to the latest-id scalars: <code>ids(M)[k] = ids(S)[k]</code> for <code>k in S</code>, else unchanged, so they are a fixed point under replay of the <em>same</em> <code>S</code> too.</li>
+<li>A rerun that pulls identical data produces a new <code>S'</code> with <code>biz(S') = biz(S)</code> but fresh ids. The 10 business columns are therefore unchanged; the scalar <code>request_id</code>/<code>staging_merge_id</code> of every touched row are overwritten with the new ids; each touched row's two lineage lists grow by exactly one element. So only the 4 metadata columns (scalars + lineage) differ, as required.</li>
+<li>Replay of the identical <code>S</code> (crash after merge, rerun of merge): the scalars are overwritten with the same values and the ids are already lineage members, <code>append_lineage</code> is a no-op, so the output file is byte-identical.</li>
+<li>Atomic overwrite means a crash leaves either the old or new complete base.</li>
+</ol>
+<h3>Why not <code>DataFrame.merge</code> naive or DuckDB?</h3>
+<p>Plain pandas on string frames keeps the logic small, testable and independent of DuckDB; <code>DataFrame.set_index(pk)</code> + <code>combine</code>/<code>concat</code> + explicit loop for lineage is acceptable at this size (252 rows total). Implementation choice is left to the Coding agent as long as the contract above holds.</p>
+</section>
+
+<section id="sql">
+<h2>13. DuckDB analysis SQL design</h2>
+<p><code>analysis.load_base_tables(con, cfg)</code> creates for each indicator: <code>CREATE OR REPLACE TABLE &lt;table_name&gt; AS SELECT * FROM read_csv('&lt;path&gt;', delim='|', header=true, all_varchar=true)</code>. It also creates views named by <code>analysis.tables</code> (<code>life_expectancy</code>, <code>gdp_per_capita</code>) over those tables, so the SQL file is static and stands alone. The base files have 14 columns (including the scalar <code>request_id</code> and <code>staging_merge_id</code>); the loader keeps them all and the SQL selects only <code>countryiso3code</code>, <code>date</code> and <code>value</code> by name, never <code>SELECT *</code>, so extra columns do not affect the analysis. <b>DuckDB version (decision A16):</b> the Coding agent verifies the installed DuckDB supports named parameters in <code>con.execute</code>; if not, it falls back to substituting the two validated integers (<code>int()</code>-checked config values) into the SQL text. The Python side binds <code>$start_year</code> and <code>$end_year</code> from config (<code>con.execute(sql, {"start_year": 2018, "end_year": 2024})</code>) and writes the result with pandas <code>to_csv(sep="|", index=False)</code>.</p>
+<h3>Metrics and why</h3>
+<ul>
+<li><code>n_years</code>: number of country-years with both values; guards the interpretation (max 7).</li>
+<li><code>avg_life_expectancy</code> and <code>avg_gdp_per_capita</code>: simple level summaries for each country over the window.</li>
+<li><code>corr_le_gdp_pc</code>: Pearson correlation between yearly life expectancy and yearly GDP per capita within the country, the direct "life expectancy by GDP per capita" relationship. NULL (empty cell) when a series is constant or n&lt;2.</li>
+<li><code>slope_years_per_10k_usd</code>: <code>REGR_SLOPE(le, gdp_pc) * 10000</code>, the effect size (years of life expectancy per US$10,000), because correlation alone hides magnitude.</li>
+</ul>
+<p>Caveats to state in README: n&le;7 per country, shared time trends and the 2020-2021 COVID dip confound the relationship, correlation is not causation.</p>
+<h3>Draft <code>sql/code/analysis.sql</code></h3>
+<pre><code>-- Life expectancy by GDP per capita, per country, for the configured date range.
+-- Tables/views expected: life_expectancy, gdp_per_capita
+--   (columns: countryiso3code, date, value, ... all VARCHAR, as loaded from the base .psv files)
+-- Parameters: $start_year, $end_year (bound by src/analysis.py from config/pipeline.yaml)
+WITH joined AS (
+    SELECT
+        le.countryiso3code,
+        CAST(le.date AS INTEGER)           AS year,
+        TRY_CAST(le.value AS DOUBLE)       AS life_expectancy,
+        TRY_CAST(g.value  AS DOUBLE)       AS gdp_per_capita
+    FROM life_expectancy AS le
+    INNER JOIN gdp_per_capita AS g
+        ON  le.countryiso3code = g.countryiso3code
+        AND le.date            = g.date
+    WHERE CAST(le.date AS INTEGER) BETWEEN $start_year AND $end_year
+),
+complete AS (
+    SELECT * FROM joined
+    WHERE life_expectancy IS NOT NULL AND gdp_per_capita IS NOT NULL
+)
+SELECT
+    countryiso3code,
+    COUNT(*)                                              AS n_years,
+    MIN(year)                                             AS first_year,
+    MAX(year)                                             AS last_year,
+    ROUND(AVG(life_expectancy), 2)                        AS avg_life_expectancy,
+    ROUND(AVG(gdp_per_capita), 2)                         AS avg_gdp_per_capita,
+    -- CORR on a constant series can yield NaN; normalize NaN to NULL
+    CASE WHEN isnan(CORR(life_expectancy, gdp_per_capita)) THEN NULL
+         ELSE ROUND(CORR(life_expectancy, gdp_per_capita), 4) END   AS corr_le_gdp_pc,
+    CASE WHEN isnan(REGR_SLOPE(life_expectancy, gdp_per_capita)) THEN NULL
+         ELSE ROUND(REGR_SLOPE(life_expectancy, gdp_per_capita) * 10000, 4) END
+                                                          AS slope_years_per_10k_usd
+FROM complete
+GROUP BY countryiso3code
+ORDER BY countryiso3code;</code></pre>
+<p>Tests must pin the constant-series behavior: the output cell is empty (NULL), never the text <code>nan</code>. (If <code>isnan</code> is applied to a NULL, e.g. n=1, the CASE yields NULL via the ELSE branch's NULL input, also empty.) If the installed DuckDB returns NULL already, the CASE is harmless.</p>
+<p>Output: <code>sql/analysis/life_expectancy_by_gdp_per_capita.psv</code> with those 8 columns, 9 rows (one per country). A countries-with-no-data case simply yields no row (flagged in the run log if rows != number of countries).</p>
+</section>
+
+<section id="failure">
+<h2>14. Failure and retry behavior</h2>
+<div class="tw"><table>
+<tr><th>Event</th><th>Behavior</th><th>Restart granularity</th></tr>
+<tr><td>Retryable failure on any page request: HTTP 429, HTTP 5xx, <code>requests.ConnectionError</code>, <code>requests.Timeout</code></td><td><code>sleep(60)</code> (config), retry the <b>same page URL</b>. After 3 retries (the 4th failure) raise <code>RateLimitExhausted</code> (last cause 429) or <code>RetryExhausted</code> (other causes) with url, attempts and last cause. Counter is per page request; causes may be mixed. Pipeline exits 3.</td><td>The whole pull (country+indicator, all pages) is discarded and restarted on next run, because order is not guaranteed.</td></tr>
+<tr><td>Non-retryable API failure: other 4xx, HTTP 200 with a non-JSON body, other <code>requests</code> exception</td><td><code>ApiHttpError</code> immediately, no sleep. Exit 3.</td><td>same</td></tr>
+<tr><td>Schema failure on any page (either array element), or duplicate PK across pages</td><td><code>SchemaCheckError</code>; nothing written for the pull; exit 4.</td><td>same</td></tr>
+<tr><td>row_count FAIL</td><td>see section 9, exit 5, no archive/merge.</td><td>Only the failing request_ids are re-pulled.</td></tr>
+<tr><td>Staging errors tied to landing files (including incomplete page set and current-config re-check failures)</td><td><code>StagingError</code>, exit 6; request_ids persisted in the marker file for re-pull (section 9).</td><td>Only the named pairs are re-pulled.</td></tr>
+<tr><td>Merge error</td><td>exit 7; base untouched (atomic write). Staging and archive intact; rerun merges leftover staging (section 11).</td><td>merge step</td></tr>
+<tr><td>Collision (id/archive/rejected target exists)</td><td><code>FileCollisionError</code>, exit 8, nothing overwritten or moved.</td><td>pull / archive</td></tr>
+<tr><td>Analysis error (missing base file, DuckDB error)</td><td><code>AnalysisError</code>, exit 9 with the missing path or DuckDB message.</td><td>analysis only</td></tr>
+</table></div>
+<ul>
+<li><b>Resume:</b> a rerun skips country+indicator pairs whose newest landing group is complete and not marked for re-pull, so work completed before a crash (for example 3 of 9 countries) is not repeated. <code>--refetch</code> overrides (all older groups go to <code>rejected/</code>).</li>
+<li><b>Resume after a later-indicator failure (R10):</b> indicators run sequentially and earlier ones are already merged. After fixing the cause, rerun with <code>--indicator &lt;failed code&gt; [more codes]</code> to continue from the failure without re-pulling finished indicators; a plain rerun also works, but re-pulls the finished ones (idempotent; scalars and lineage change). Analysis needs all four base files, otherwise <code>AnalysisError</code>.</li>
+<li><b>Never partial:</b> pages are held in memory until all pass; the page files then appear as a set (temp files + renames) and a partial set is detected by the completeness check (section 6).</li>
+<li>Clear error: <code>RateLimitExhausted: 429 Too Many Requests persisted after 3 retries (sleep 60s each) for GET &lt;url&gt;; pipeline stopped. Rerun to resume at country=BRA indicator=SP.POP.TOTL.</code> (<code>RetryExhausted</code> names the last cause, e.g. <code>HTTP 503</code> or <code>ConnectionError</code>.)</li>
+<li>Worst-case delay: 3 retries x 60s per failing page request; tests inject <code>sleep</code> so no real waits.</li>
+</ul>
+</section>
+
+<section id="tests">
+<h2>15. Test strategy (for the Testing agent)</h2>
+<p>Write pytest tests from this plan and the requirements only, against the function contract in section 5. No network; no real sleeping; every test uses <code>tmp_path</code> and a config dict/YAML written there.</p>
+<h3>Mock API (<code>conftest.py</code>)</h3>
+<ul>
+<li><code>FakeResponse(status_code, payload, text=None)</code> with <code>.status_code</code>, <code>.json()</code>, <code>.text</code>.</li>
+<li><code>make_fake_http_get(responses)</code>: returns a callable <code>(url, timeout=None)</code> that records every call (<code>calls</code> list) and returns scripted responses per parsed (country, indicator, page); can script a sequence (e.g. 429, 503, 200) and can raise <code>requests.ConnectionError</code>/<code>requests.Timeout</code>.</li>
+<li>Payload builders: <code>make_page(country, indicator, years, page, pages, per_page, total)</code> producing the exact shape from the prompt's API example, incl. a null-value record and ISO2 <code>country.id</code>. <code>make_pull(country, indicator, years=2018..2024, per_page=3)</code> returns the list of 3 pages (3+3+1 records, <code>total=7</code>, <code>pages=3</code>) like the live API.</li>
+<li><code>fake_sleep</code> records durations. Network guard: monkeypatch <code>requests.get</code> / <code>socket.socket</code> to raise so any real call fails the test.</li>
+<li><code>cfg</code> fixture writes a <code>config/pipeline.yaml</code> inside <code>tmp_path</code> (so the project root is <code>tmp_path</code>) with 2 countries and 2 indicators (<code>SP.DYN.LE00.IN</code> and <code>NY.GDP.PCAP.CD</code>, so <code>analysis.tables</code> validates; <code>per_page: 3</code>) to also prove YAML-only extensibility. <code>pytest.ini</code> (<code>--basetemp=.pytest_tmp -p no:cacheprovider</code>) keeps <code>tmp_path</code> inside <code>/home/hodge/Lateral</code>; <code>conftest.py</code> removes <code>.pytest_tmp</code> in <code>pytest_sessionfinish</code> so no scratch is left to be committed (section 4).</li>
+<li><code>fake_now</code>: zero-arg callable returning successive aware UTC datetimes (e.g. +1 microsecond each call).</li>
+</ul>
+<h3>Cases</h3>
+<div class="tw"><table>
+<tr><th>Area</th><th>Cases</th></tr>
+<tr><td>URL building</td><td>Parse the URL with <code>urllib.parse</code> (do not compare strings): host/path from config, <code>format=json</code>, <code>date=2018:2024</code>, <code>page</code>, <code>per_page</code> present/absent; changing config changes URL; adding a country/indicator needs no code.</td></tr>
+<tr><td>Retry (429, 5xx, connection)</td><td>429 then 200: <code>sleep</code> called once with 60, one extra call. 3x429 then 200: 3 sleeps, success. 4x429: <code>RateLimitExhausted</code>, exactly 4 http calls and 3 sleeps. <b>Same policy for 500/502/503 and for <code>requests.ConnectionError</code>/<code>Timeout</code></b>: 3 retries then <code>RetryExhausted</code> (4 calls, 3 sleeps of 60); mixed causes share one counter. Success after a 503 works. Sleep value and max_retries come from config (change them and assert); <code>retry_on_5xx: false</code> makes a 503 raise <code>ApiHttpError</code> immediately (no sleep, one call). Non-retryable: 404/400, 200 with non-JSON body: <code>ApiHttpError</code>, no sleep, one call. Retry counter is per page: page 2 retries do not consume page 1's budget.</td></tr>
+<tr><td>Paging</td><td>With <code>per_page=3</code> and 7 records: requests for page 1,2,3 only (URLs contain <code>per_page=3</code> and <code>page=N</code>), 3 raw responses returned by <code>fetch_pull</code> in order; <code>pages=1</code>: one request; metadata mismatch (<code>total</code> or <code>pages</code> changes on page 2, or <code>page</code> not the requested one) raises. <b>Duplicate PK across pages with record count == total</b> (page 2 repeats a year from page 1): <code>SchemaCheckError</code>, no landing file, no <code>.part</code> file, no log, and a subsequent run with a corrected fake succeeds (no deadlock).</td></tr>
+<tr><td>Schema check</td><td><b>Both array elements are checked.</b> Valid page passes. Element 0 failures: not a list; API error body length 1; missing metadata key (each of <code>page, pages, per_page, total, sourceid, lastupdated</code>); wrong metadata type; <code>per_page</code> as digit string passes, as non-digit string fails; extra metadata key warns. Element 1 failures: records not a list / null / empty; missing record key; value is a string; bool; wrong <code>countryiso3code</code>; <code>date</code> not 4 digits / out of range; wrong <code>indicator.id</code>; null value allowed; extra record key passes with a warning (capture log), missing record key fails. Failure writes no landing/log file. Multiple violations (in both elements) all reported in one error.</td></tr>
+<tr><td>request_id</td><td>All pages share one id: every page file name, the log, and the log's file name use it (one request_id for 3 page files and 1 log); two pulls get different ids (<code>fake_now</code>, same callable type passed through <code>main</code>/<code>run_all</code>/<code>ingest_*</code>); format matches <code>^\d{8}T\d{12}$</code> (21 chars).</td></tr>
+<tr><td>File and log naming/format</td><td>Landing <code>storage/landing/&lt;I&gt;/&lt;C&gt;_&lt;I&gt;_&lt;rid&gt;_p&lt;N&gt;.json</code>: a 3-page pull yields exactly 3 files <code>_p1,_p2,_p3</code>, each containing exactly that page's raw 2-element array (equal to the fake's payload); log at <code>log/&lt;I&gt;/&lt;rid&gt;.log</code> (one per request_id, not per page) with exactly <code>rid|7|3|C|I\n</code>; log values are the first page request's metadata values. <b>Atomic set:</b> a simulated failure while writing leaves no final files, and leftover <code>*.part</code> files are ignored by listing and removed by the next ingest; with only <code>_p1</code>, <code>_p3</code> present (partial renames) staging raises <code>StagingError</code> naming the request_id and ingest rejects the group and re-pulls.</td></tr>
+<tr><td>Staging</td><td><b>Pages concatenated:</b> a 3-page request_id becomes one per-country frame of 7 rows <em>before</em> combining. <b>Page set completeness:</b> missing page, extra page number beyond <code>pages</code>, files disagreeing on <code>pages</code>/<code>total</code>, or file-name page differing from metadata <code>page</code> each raise <code>StagingError</code> with the request_id. <b>String conversion:</b> records with int values mixed with nulls land as <code>"212812405"</code> and <code>""</code> (not <code>212812405.0</code>); floats via <code>repr</code>; strings unchanged. Per-country frames then combined; PSV is pipe-delimited with header; <code>staging_merge_id</code> column is a valid UUID, identical on all rows, differs between runs; duplicate PK raises; pipe in a field raises <code>StagingError</code> (not bare <code>ValueError</code>).</td></tr>
+<tr><td>row_count</td><td>PASS when the log total (7) equals the per-country frame row count built from all 3 page files (report row PASS). Dropping one record from the last page file (with the log still 7) FAILs. Latest-report rule: with two reports present, <code>failed_request_ids</code> uses the one with the greater filename. FAIL when log total != frame rows (tamper the log or drop a record): report has FAIL row with expected/actual; <code>RowCountFailure</code>; in <code>run_indicator</code>, landing files remain, archived is empty, base untouched. Comparison uses per-country frame (not the combined frame): a case where totals cancel out across countries must still FAIL. Missing log is FAIL, not crash. Report path/columns per section 9. Rerun after failure re-pulls only the failed country. A landing file that fails the current-config re-check at staging (e.g. a leftover file with a date outside the range) is marked and re-pulled on the next run.</td></tr>
+<tr><td>Staging-failure marker (N2, N3)</td><td>A leftover landing file with a date outside the configured range: <code>build_country_frames</code> raises <code>StagingError</code> (not <code>SchemaCheckError</code>) with that request_id, exit code 6; <code>run_indicator</code> writes the marker; the next run re-pulls only that pair, moves the old request_id's page files to <code>rejected/</code>, removes the id from the marker and deletes the empty marker file. Marker written twice with overlapping ids is the sorted union, no duplicates. With a marker file beside <b>two</b> row_count reports, <code>latest_report</code> returns the newer report, never the marker.</td></tr>
+<tr><td>Landing recovery (B2)</td><td>(a) <code>refetch=True</code>: all old request_id groups for each pair go to <code>rejected/</code> (all page files of each together), exactly one new complete group (3 page files) in landing. (b) Crash simulation: two request_id groups for one pair (old and new): <code>ingest_indicator</code> keeps the newest request_id group (grouping by request_id, not by file), rejects the older group's 3 files together, no new pull unless marked. (c) Landing group for a country removed from config is rejected with a warning. (d) Staging never sees &gt;1 request_id per pair. (e) Rejection or archive never splits a request_id's page files; a pre-existing target raises <code>FileCollisionError</code> and nothing moves.</td></tr>
+<tr><td>Archive</td><td>After pass, landing empty and all page files of every request_id in archived; not run on failure; pre-existing target raises <code>FileCollisionError</code>. Crash simulation: staging present, landing empty, id not in base lineage, report all PASS, complete page sets archived: <code>merge_leftover_staging</code> merges it once; calling again is a no-op. <b>Negative cases (N1), base absent and base present:</b> leftover staging whose report has a FAIL row and landing empty is NOT merged; leftover staging with no report is NOT merged; leftover staging with PASS report but a request_id's page set missing a page in <code>archived/</code> is NOT merged.</td></tr>
+<tr><td>Merge</td><td>First run creates base from staging with the 14 columns, scalars equal to the staging ids and one-element lineages. New-key insert and existing-key update (changed value updates, others kept). Base-only key retained. <b>Latest-id scalars:</b> after an update the row's <code>request_id</code>/<code>staging_merge_id</code> equal the newest staging ids (overwritten, not appended); inserted rows get the staging ids; base-only rows keep old scalars and lineage. Two runs with identical data: the 10 business columns identical (compare with the 4 metadata columns dropped, and compare the business part of the written bytes), scalars <b>differ</b> and equal the second run's ids, lineage lists length 2, each id once, last element equals the scalar. Three runs: length 3. Replaying the same staging file twice: file byte-identical. Lineage parse/serialize/append unit tests incl. empty, duplicate id. No pipe inside any field; base readable back and appendable.</td></tr>
+<tr><td>Config</td><td>Missing keys, empty lists, duplicate codes, start&gt;end, path escaping root, country not <code>^[A-Z]{3}$</code>, <code>request_id.format</code> without <code>%f</code> or rendering to a string containing <code>;|/_</code> or whitespace, <code>primary_key</code> containing <code>request_id</code> or an unknown column, or lacking <code>countryiso3code</code> (N6), <code>request_id.format</code> not starting <code>%Y%m%d</code> or with fields out of Y-m-d-H-M-S-f order (N5), bad <code>per_page</code> raise <code>ConfigError</code>; <code>per_page: "50"</code> accepted. Project root equals the config file's parent directory's parent. Per-indicator primary key is honored (use a custom PK such as <code>[countryiso3code, date, unit]</code> in the merge test).</td></tr>
+<tr><td>Analysis</td><td>With small hand-made base files in tmp_path: output has 1 row per country, expected avg and corr (compute independently with numpy), 8 columns, pipe-delimited, SQL file exists and is the one executed, date filter honors config. A country with a constant life-expectancy series has an <b>empty</b> <code>corr_le_gdp_pc</code> cell, never <code>nan</code>. Missing base file raises <code>AnalysisError</code>. Base files with the 14 columns (incl. scalars) load and the result is unchanged by the extra columns.</td></tr>
+<tr><td>End to end (mocked)</td><td><code>main(["--config", cfg_path], http_get=fake, sleep=fake_sleep, now=fake_now)</code> (keyword-only seams) returns 0 and produces all artifacts in the folder layout. With the 2-country x 2-indicator test config and 7 records at <code>per_page=3</code>: <b>4 pulls = 12 http calls</b>, 12 landing page files (all archived afterwards, landing empty), 4 logs with <code>pages=3</code>, 4 base files. (For the real config this is 36 pulls = 108 requests.) Second run keeps business data and extends lineage, scalars change. Separately, arg parsing (<code>--indicator</code>, <code>--skip-analysis</code>, <code>--refetch</code>) and the exception-to-exit-code mapping (2..9, unexpected error = 1) are tested by monkeypatching <code>run_all</code>.</td></tr>
+<tr><td>No network/secrets</td><td>Network guard fixture active in all tests; no env vars required.</td></tr>
+</table></div>
+<p>Anti-collusion: tests are written from this document only; if a test seems wrong, the Coding agent reports it, never edits it.</p>
+</section>
+
+<section id="run-order">
+<h2>16. Run order and entrypoint</h2>
+<pre><code>python -m src.run_pipeline --config config/pipeline.yaml
+   [--indicator SP.POP.TOTL ...]   # subset (default: all in config order); also the resume path after a later-indicator failure
+   [--skip-analysis]
+   [--refetch]                     # ignore resume, re-pull every pair (older groups go to rejected/)
+   [--log-level INFO]</code></pre>
+<ol>
+<li><code>load_config</code> -> create run log.</li>
+<li>For each indicator in config order: <code>merge_leftover_staging</code> (guarded, section 11), then <code>ingest_indicator</code> (steps: request_id, fetch pages, schema check each page, PK uniqueness, log, page files) -> <code>build_staging</code> -> <code>row_count_test</code> + <code>write_row_count_report</code> + <code>assert_row_count_passed</code> -> <code>archive_landing</code> -> <code>merge_indicator</code>.</li>
+<li>After all indicators succeed: <code>run_analysis</code>.</li>
+<li>Exit 0, or the mapped code (section 5) on the first <code>PipelineError</code>.</li>
+</ol>
+<p>Run from any directory; paths resolve against the project root. A full run is 36 sequential small pulls of 3 page requests each (108 requests, roughly a couple of minutes without retries).</p>
+</section>
+
+<section id="assumptions">
+<h2>17. Assumptions, decisions and open questions</h2>
+<h3>Decisions recorded (human-approved, formerly open questions)</h3>
+<div class="tw"><table>
+<tr><th>Id</th><th>Decision</th><th>Where applied</th></tr>
+<tr><td>A1 (was Q1, part 1)</td><td><b>One landing file per page</b>: <code>&lt;country-code&gt;_&lt;indicator-code&gt;_&lt;request_id&gt;_p&lt;page&gt;.json</code>, each holding that page's raw 2-element response array. All pages of a pull share one request_id; there is one log per request_id. This <b>replaces my earlier assumption</b> (one file with all pages) and deliberately deviates from the prompt's page-less file name. Written as an atomic set after the whole pull passes schema check and PK uniqueness; staging verifies page set 1..pages.</td><td>3, 5, 6, 8, 9, 10, 11, 15</td></tr>
+<tr><td>A2 (was Q1, part 2)</td><td><b>Halt the whole pipeline when row_count fails</b>: before archive and merge for that indicator; landing and staging stay; report written; exit 5; rerun re-pulls only the failed request_ids.</td><td>9, 14</td></tr>
+<tr><td>A3</td><td>request_id uses the UTC clock; <code>now</code> is a zero-arg callable returning an aware UTC datetime.</td><td>5, 6</td></tr>
+<tr><td>A4 (was Q10)</td><td>The log is <em>written</em> when the pull completes, using <code>total</code>/<code>pages</code> captured from the first page request's response metadata; failed pulls leave no log. Accepted.</td><td>6, 8</td></tr>
+<tr><td>A5 (was Q5, Q3)</td><td>Lineage lists are <code>;</code>-joined strings. Base-only keys are retained, never deleted (the base keeps keys that disappear from the API).</td><td>12</td></tr>
+<tr><td>A6</td><td>An empty result (<code>total=0</code> or records null) for a configured country/indicator is an error.</td><td>6, 7</td></tr>
+<tr><td>A7 (was Q2)</td><td><b>Retry policy</b>: 429, any 5xx and connection errors/timeouts are all retried the same way (sleep 60s, up to 3 retries, then fail with <code>RateLimitExhausted</code>/<code>RetryExhausted</code>, exit 3). Other 4xx and non-JSON bodies fail immediately.</td><td>3, 5, 14, 15</td></tr>
+<tr><td>A8 (was Q6)</td><td><code>api.per_page</code> defaults to <b>3</b> in config so paging is visible live: 7 records = 3 pages per pull = 3 page files and 3 requests; 36 pulls = 108 requests. Log shows <code>pages=3 total=7</code>.</td><td>3, 6, 8, 15, 16</td></tr>
+<tr><td>A9 (was Q7)</td><td>Staging file keeps a stable name <code>&lt;I&gt;_staging.psv</code>, overwritten each run.</td><td>10</td></tr>
+<tr><td>A10 (was Q4)</td><td><code>unit</code>, <code>obs_status</code>, <code>decimal</code>, <code>country_id</code>, <code>country_name</code>, <code>indicator_name</code> are kept in staging and base. Unknown extra fields in the API response (metadata or record) are tolerated with a logged warning; missing required fields fail.</td><td>7, 10, 12</td></tr>
+<tr><td>A11</td><td>New dependencies: <code>pyyaml</code> (config), <code>pytest</code> (tests).</td><td>4</td></tr>
+<tr><td>A12 (was Q11)</td><td>row_count report layout (one file per run, one row per request_id, sortable timestamp in the name) is accepted.</td><td>9</td></tr>
+<tr><td>A13 (was Q9)</td><td><b>Commit everything</b>, including generated data, logs, reports and <code>sql/analysis/</code> output; the plan adds no git-ignore. Phase 5 stages by explicit pathspec (excluding venv, <code>__pycache__</code>, <code>.pytest_tmp</code>, <code>.pytest_cache</code>). pytest uses <code>--basetemp=.pytest_tmp -p no:cacheprovider</code> and <code>conftest.py</code> deletes <code>.pytest_tmp</code> at session end. The existing untracked <code>.gitignore</code> (user's; <code>.venv/</code> only) is left as-is and not relied upon.</td><td>4, 15</td></tr>
+<tr><td>A14</td><td>Project root is always the parent of the config file's directory.</td><td>3</td></tr>
+<tr><td>A15 (was Q12)</td><td>Leftover landing groups for a country removed from config are rejected (moved to <code>rejected/</code>) with a warning, not archived.</td><td>5, 10, 15</td></tr>
+<tr><td>A16 (was Q8)</td><td>DuckDB named parameters are the plan; the Coding agent verifies the installed DuckDB version and falls back to substituting validated integers into the SQL text if unsupported.</td><td>13</td></tr>
+<tr><td>A17</td><td>Annual indicators only (4-digit <code>date</code>); other frequencies need a config extension.</td><td>7</td></tr>
+<tr><td>A18</td><td>Unexpected non-pipeline exceptions exit with code 1 and a logged traceback.</td><td>5</td></tr>
+<tr><td>A19</td><td>Base rows carry the <em>latest</em> <code>request_id</code> and <code>staging_merge_id</code> as scalar columns (overwritten on every update/insert) in addition to the two lineage lists (14 columns). On an identical rerun business values stay identical; the scalars and lineage lists change.</td><td>12, 15</td></tr>
+</table></div>
+<h3>Open questions for the human</h3>
+<ol>
+<li><b>O1</b> The repo root contains an <em>untracked</em> <code>.gitignore</code> created by the user (at planning time it contains only <code>.venv/</code>). The plan leaves it untouched and does not rely on it; Phase 5 will stage by explicit pathspec so the venv, bytecode and pytest scratch are never committed regardless. Should that <code>.gitignore</code> be committed as is, left untracked, or removed? (Everything else is decided; no other open questions remain.)</li>
+</ol>
+</section>
+
+<section id="trace">
+<h2>18. Requirements traceability</h2>
+<p>Every requirement bullet in <code>Prompt/prompt.md</code> mapped to the plan section that satisfies it.</p>
+<input class="filter" id="tracefilter" placeholder="Filter requirements">
+<div class="tw"><table id="tracetable">
+<tr><th>#</th><th>Requirement (prompt.md)</th><th>Plan section</th></tr>
+<tr><td>G1</td><td>Pipeline: pull API, land JSON, validate, stage, idempotent merge, DuckDB SQL</td><td>2, 16</td></tr>
+<tr><td>G2</td><td>Countries BRA, CAN, DEU, GBR, IND, JPN, MEX, USA, ZAF</td><td>3 (config)</td></tr>
+<tr><td>G3</td><td>Four indicators with names and codes</td><td>3 (config)</td></tr>
+<tr><td>G4</td><td>Date range 2018 to 2024 inclusive</td><td>3, 5 (<code>build_url</code>), 7 (date rule)</td></tr>
+<tr><td>G5</td><td>Build request URLs dynamically from config per API docs</td><td>3 (<code>path_template</code>), 5 (<code>build_url</code>), 15</td></tr>
+<tr><td>E1</td><td>Packages; pip install extras listed in requirements.txt</td><td>4, 17 (A11)</td></tr>
+<tr><td>E2</td><td>All files/dirs inside /home/hodge/Lateral (incl. pytest temp dirs)</td><td>3 (root = config parent, validation), 4 (<code>pytest.ini</code>), 17 (A13, A14)</td></tr>
+<tr><td>E3</td><td>Procedural, small functions, no classes required</td><td>5</td></tr>
+<tr><td>E4</td><td>Any failure restarts the pull; small pulls per country+indicator</td><td>6 (incl. PK uniqueness), 9 (re-pull markers), 14</td></tr>
+<tr><td>E5</td><td>Dates, paths, countries, indicators from config, nothing hardcoded</td><td>3, 13 (aliases/params), 15</td></tr>
+<tr><td>C1</td><td>YAML config: countries, indicators (code, name), date range, base paths, retry settings</td><td>3</td></tr>
+<tr><td>C2</td><td>Adding country/indicator is YAML-only; primary key per-indicator config</td><td>3, 12, 15</td></tr>
+<tr><td>I1</td><td>Request format JSON</td><td>3 (<code>format</code>), 5</td></tr>
+<tr><td>I2</td><td>Page through results using <code>pages</code> from the first page request's response metadata until all pages are fetched</td><td>6 (live default 3 pages per pull, A8)</td></tr>
+<tr><td>I3</td><td>One request_id per country+indicator pull, shared by every page, timestamp format</td><td>6</td></tr>
+<tr><td>I4</td><td>429: sleep 60s, retry, fail after 3 retries with clear error</td><td>5 (<code>fetch_page</code>), 14; extended by decision A7 to 5xx and connection errors/timeouts (same policy)</td></tr>
+<tr><td>I5</td><td>Landing file name <code>&lt;country&gt;_&lt;indicator&gt;_&lt;request_id&gt;.json</code> in <code>storage/landing/&lt;indicator&gt;/</code></td><td>4, 5, 6; <b>deviation by human decision A1</b>: name gets a <code>_p&lt;page&gt;</code> suffix before <code>.json</code></td></tr>
+<tr><td>I6</td><td>One landing file per country per indicator; all pages in one file as list of raw responses; state assumption</td><td><b>Superseded by human decision A1</b> (17): one landing file per page, same request_id, one log per request_id; assumption stated in 6 and 17</td></tr>
+<tr><td>I7</td><td>Schema check first after API: metadata keys, record keys/types, countryiso3code, date, indicator.id; fail loudly, no silent drops</td><td>7 (both array elements of every page: element 0 metadata, element 1 records), 14</td></tr>
+<tr><td>L1</td><td>On page 1 record <code>total</code> and <code>pages</code></td><td>6, 8; values are captured from the first page request but the log is written at pull completion (accepted interpretation, A4)</td></tr>
+<tr><td>L2</td><td>One log file per request <code>log/&lt;indicator&gt;/&lt;request_id&gt;.log</code></td><td>4, 8</td></tr>
+<tr><td>L3</td><td>Line <code>request_id|total|pages|country_code|indicator_code</code></td><td>8</td></tr>
+<tr><td>S1</td><td>Read landing JSON into pandas: per-country frame (all page files of a request_id concatenated) then combine to one staging frame</td><td>10</td></tr>
+<tr><td>S2</td><td>Write staging as pipe-delimited <code>storage/staging/&lt;indicator&gt;/...psv</code></td><td>4, 10</td></tr>
+<tr><td>S3</td><td><code>staging_merge_id</code> random UUID at staging creation, added as column</td><td>10</td></tr>
+<tr><td>T1</td><td>row_count: per request_id, log <code>total</code> vs per-country dataframe rows (all pages) before combine</td><td>9, 10</td></tr>
+<tr><td>T2</td><td>Pass/fail report per request_id in <code>tests/&lt;indicator&gt;/row_count/</code></td><td>9; one report per run with a row per request_id (accepted, A12)</td></tr>
+<tr><td>T3</td><td>Define run behavior on failure (recommended: stop before archive/merge, keep landing)</td><td>9, 14, 17 (A2)</td></tr>
+<tr><td>A1</td><td>Move landing files (all page files of each request_id together) to <code>storage/archived/&lt;indicator&gt;/</code> after pass; landing empty</td><td>11</td></tr>
+<tr><td>M1</td><td>Read staging and base <code>storage/data/&lt;indicator&gt;/</code>, upsert on PK, idempotent reruns</td><td>12</td></tr>
+<tr><td>M2</td><td>Two list columns <code>request_id_linage</code>, <code>staging_merged_id_linage</code> appending latest ids (plus latest scalar <code>request_id</code>/<code>staging_merge_id</code> columns, A19)</td><td>12</td></tr>
+<tr><td>M3</td><td>Identical-data reruns change only lineage; no duplicate id appended</td><td>12 (dedupe, proof). Honest note: the latest-id scalar columns (A19) also change on rerun; business values never do.</td></tr>
+<tr><td>M4</td><td>Write base back to same location, overwrite, pipe-delimited</td><td>12</td></tr>
+<tr><td>M5</td><td>List serialization readable and appendable; decide in plan; no pipes in fields</td><td>12 (serialization), 5 (<code>write_psv</code>)</td></tr>
+<tr><td>M6</td><td>Create base from staging if it does not exist</td><td>12 (first run)</td></tr>
+<tr><td>Q1</td><td>Load all four base files into DuckDB</td><td>13, 5 (<code>load_base_tables</code>)</td></tr>
+<tr><td>Q2</td><td>SQL: life expectancy by GDP per capita per country, join on country and date, metrics stated and justified</td><td>13</td></tr>
+<tr><td>Q3</td><td>Result as pipe-delimited file in <code>sql/analysis/</code></td><td>4, 13</td></tr>
+<tr><td>Q4</td><td>Query saved to <code>sql/code/analysis.sql</code></td><td>4, 13</td></tr>
+<tr><td>P1</td><td>Plan HTML covers architecture, data flow, config, layout, failure/retry, idempotency, tests</td><td>2, 3, 4, 14, 12, 15</td></tr>
+<tr><td>P2</td><td>Assumptions and open questions incl. one-file-per-country and row_count failure</td><td>17 (both decided: A1 now one file per page, A2 halt; one open question O1)</td></tr>
+<tr><td>P3</td><td>Keep all required paths (layout may be adjusted)</td><td>4</td></tr>
+<tr><td>P4</td><td>Phase 2 test coverage list (URL, 429, paging, schema, request_id, naming, row_count, idempotency, insert/update, lineage, no network)</td><td>15</td></tr>
+<tr><td>P5</td><td>Transformation flow steps 1-6 order</td><td>2, 16</td></tr>
+<tr><td>P6</td><td>Anti-collusion: tests from plan only; interface contract pinned</td><td>5, 15</td></tr>
+<tr><td>P8</td><td>Review fixes: duplicate-key pull check (B1), landing recovery (B2), latest-report rule (B3, N3), <code>now</code> contract (B4), <code>main</code> seams (B5), pytest basetemp (B6), 21-char id (B7), string conversion (B8), exit-code map (R1), leftover-staging merge guarded by PASS report plus archived ids (R2, N1), staging re-check failures wrapped as <code>StagingError</code> with marker (R3, N2), sortable request_id format (N5), PK must include <code>countryiso3code</code> (N6)</td><td>3, 5, 6, 9, 11, 15, 17</td></tr><tr><td>P9</td><td>Human review decisions (revision 3): per-page landing files with completeness check (A1), halt on row_count failure (A2), 5xx/connection retries (A7), <code>per_page: 3</code> (A8), scalar latest ids in base (A19), commit-everything and pytest scratch cleanup (A13), terminology &ldquo;response metadata (array element 0)&rdquo;, questions Q1-Q12 resolved</td><td>3, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17</td></tr>
+<tr><td>P7</td><td>Phase 5: check <code>git status</code>; nothing sensitive or generated staged (venv, large data)</td><td>4 (A13): the human decided to commit everything including generated small data; venv, bytecode and pytest scratch still excluded by explicit pathspec; user's <code>.gitignore</code> untouched (O1)</td></tr>
+</table></div>
+</section>
+</main>
+</div>
+<script>
+(function(){
+ var root=document.documentElement,nav=document.getElementById('nav');
+ try{var t=localStorage.getItem('theme');if(t)root.setAttribute('data-theme',t);}catch(e){}
+ document.getElementById('theme').onclick=function(){
+  var dark=root.getAttribute('data-theme')==='dark'||(!root.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme:dark)').matches);
+  var n=dark?'light':'dark';root.setAttribute('data-theme',n);try{localStorage.setItem('theme',n)}catch(e){}
+ };
+ document.getElementById('menu').onclick=function(){nav.classList.toggle('open')};
+ nav.addEventListener('click',function(e){if(e.target.tagName==='A')nav.classList.remove('open')});
+ // wrap h3 subsections into collapsible details
+ document.querySelectorAll('section').forEach(function(sec){
+  sec.querySelectorAll(':scope > h3').forEach(function(h){
+   var d=document.createElement('details');d.open=true;var s=document.createElement('summary');s.textContent=h.textContent;
+   var w=document.createElement('div');d.appendChild(s);d.appendChild(w);
+   var n=h.nextSibling;h.parentNode.insertBefore(d,h);
+   while(n&&!(n.nodeType===1&&(n.tagName==='H3'||n.tagName==='DETAILS'&&n.parentNode===sec&&false))){var nx=n.nextSibling;w.appendChild(n);n=nx;}
+   h.remove();
+  });
+ });
+ var open=true;
+ document.getElementById('expand').onclick=function(){
+  open=!open;document.querySelectorAll('details').forEach(function(d){d.open=open});
+  this.textContent=open?'Collapse all':'Expand all';
+ };
+ document.getElementById('expand').textContent='Collapse all';
+ function filt(inp,tbl){document.getElementById(inp).addEventListener('input',function(){
+  var q=this.value.toLowerCase();document.querySelectorAll('#'+tbl+' tr').forEach(function(r,i){
+   if(i===0)return;r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'':'none';});});}
+ filt('fnfilter','fntable');filt('tracefilter','tracetable');
+ var links=[].slice.call(nav.querySelectorAll('a'));
+ var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'))});
+ function spy(){var y=window.scrollY+80,c=0;secs.forEach(function(s,i){if(s.offsetTop<=y)c=i});
+  links.forEach(function(a,i){a.classList.toggle('active',i===c)});}
+ window.addEventListener('scroll',spy);spy();
+})();
+</script>
+</body>
+</html>
